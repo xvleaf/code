@@ -1,3 +1,5 @@
-venv/*
 data.db
 website/settings.py
+venv/**
+**/__pycache__/**
+log/*

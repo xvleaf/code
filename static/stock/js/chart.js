@@ -399,12 +399,6 @@ function get_quote_data(cat, market_with_code) {
 	let data = ajax_sync(url, post);
 	if (data) {
 		set_quote_data(data);
-	} else {
-		layer.msg('获取报价数据失败 ！', {
-			icon: 7,
-			time: 2000
-		}, function(){
-		});
 	}
 }
 
@@ -466,13 +460,6 @@ function get_trend_data(cat, market_with_code) {
 		else {
 			status = false;
 		}
-	} else {
-		status = false;
-		layer.msg('获取分时数据失败 ！', {
-			icon: 7,
-			time: 2000
-		}, function(){
-		});
 	}
 
 	return status;

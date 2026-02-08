@@ -40,12 +40,6 @@ function update_stock_list() {
 			document.getElementById(`close-${code}`).innerText = value_with_deci(close, deci);
 			document.getElementById(`change-${code}`).innerText = value_with_deci(change, 2);
 		}
-	} else {
-		layer.msg('获取数据失败 ！', {
-			icon: 7,
-			time: 2000 //2秒关闭，若不配置默认3秒
-		}, function(){
-		});
 	}
 }
 
@@ -824,12 +818,6 @@ function fund_list_update() {
 				document.getElementById(`cap-${code}`).innerText = cap;
 			}
 		}
-	} else {
-		layer.msg('获取数据失败 ！', {
-			icon: 7,
-			time: 2000
-		}, function(){
-		});
 	}
 }
 
@@ -879,12 +867,6 @@ function sector_list_update() {
 			document.getElementById(`rise-${code}`).innerText = rise;
 			document.getElementById(`fall-${code}`).innerText = fall;
 		}
-	} else {
-		layer.msg('获取数据失败 ！', {
-			icon: 7,
-			time: 2000
-		}, function(){
-		});
 	}
 }
 
@@ -899,12 +881,6 @@ function fund_list_refresh() {
 
 	if (data) {
 		window.location.href = `/fund/list`;
-	} else {
-		layer.msg('获取数据失败 ！', {
-			icon: 7,
-			time: 2000
-		}, function(){
-		});
 	}
 }
 
@@ -917,12 +893,6 @@ function sector_list_refresh() {
 
 	if (data) {
 		window.location.href = `/sector/list`;
-	} else {
-		layer.msg('获取数据失败 ！', {
-			icon: 7,
-			time: 2000
-		}, function(){
-		});
 	}
 }
 
@@ -1401,12 +1371,6 @@ function review_list_update(review_type) {
 				document.getElementById(`cost-${each['flow']}`).innerText = value_with_deci(cost, each['deci']);
 			}
 		}
-	} else {
-		layer.msg('获取数据失败 ！', {
-			icon: 7,
-			time: 2000 //2秒关闭，若不配置默认3秒
-		}, function(){
-		});
 	}
 }
 

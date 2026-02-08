@@ -6,6 +6,7 @@ import random
 from typing import Dict, List
 
 import requests
+from requests.exceptions import RequestException 
 
 import pandas as pd
 import numpy as np
@@ -17,6 +18,36 @@ from django.core.cache import cache
 from models.models import StockTransFlow, StockTransDeal
 from stock import func
 from website import base
+
+
+last_request_time = 0.0
+# 最小请求时间间隔（秒）
+min_interval = 1
+
+
+# 向股票网站请求频率限制
+def stock_source_query(url, params):
+    global last_request_time, min_interval
+    
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    }
+
+    # 计算需要等待的时间
+    wait_time = min_interval - (time.time() - last_request_time)
+
+    # 如果间隔不足1秒，等待补足
+    if wait_time > 0:
+        time.sleep(wait_time)
+    
+    try:
+        res = requests.get(url, params=params, headers=headers)
+    except RequestException:
+        res = None
+    
+    last_request_time = time.time()
+    
+    return res
 
 
 def check_market_code(market_with_code):
@@ -56,8 +87,8 @@ class Link:
             'fields': 'f12,f13,f14'
         }
 
-        res = requests.get(url, params=params).json()
         try:
+            res = stock_source_query(url, params).json()
             lists = []
             data = res['data']['diff']
             for each in data:
@@ -88,8 +119,8 @@ class Link:
             'fields': 'f2,f3,f12,f13,f14'
         }
 
-        res = requests.get(url, params=params).json()
         try:
+            res = stock_source_query(url, params).json()
             lists = []
             data = res['data']['diff']
 
@@ -126,9 +157,14 @@ class Stock:
             'fs': 'm:0+t:6,m:0+t:80,m:1+t:2,m:1+t:23,m:0+t:81+s:2048',
             'fields': 'f12,f13,f14'
         }
-        res = requests.get(url, params=params).json()['data']['diff']
-        # 排除掉以 4 开头的代码
-        data = [item for item in res if not item["f12"].startswith("4")]
+
+        try:
+            res = stock_source_query(url, params).json()['data']['diff']
+            # 排除掉以 4 开头的代码
+            data = [item for item in res if not item["f12"].startswith("4")]
+        except TypeError:
+            data = []
+        
         return data
 
     @staticmethod
@@ -154,16 +190,19 @@ class Stock:
                 'secids': secids
             }
 
-            res = requests.get(url, params=params).json()['data']['diff']
-            for each in res:
-                market, code = convert_market_code(each['f13'], each['f12'])
-                data.append({
-                    'code': code,
-                    'name': each['f14'],
-                    'market': market,
-                    'close': round(float(each['f2']) / 100, 2),
-                    'change': base.format_decimal(float(each['f3']) / 100, 2)
-                })
+            try:
+                res = stock_source_query(url, params).json()['data']['diff']
+                for each in res:
+                    market, code = convert_market_code(each['f13'], each['f12'])
+                    data.append({
+                        'code': code,
+                        'name': each['f14'],
+                        'market': market,
+                        'close': round(float(each['f2']) / 100, 2),
+                        'change': base.format_decimal(float(each['f3']) / 100, 2)
+                    })
+            except TypeError:
+                data = []
 
         return data
 
@@ -212,8 +251,12 @@ class Fund:
             'fs': fs,
             'fields': fields
         }
-        res = requests.get(url, params=params).json()
-        data = res['data']['diff']
+
+        try:
+            res = stock_source_query(url, params).json()
+            data = res['data']['diff']
+        except TypeError:
+            data = []            
         return data
 
     @staticmethod
@@ -228,23 +271,27 @@ class Fund:
                 'fields': fields,
                 'secids': ','.join(f'{each.market}.{each.code}' for each in lists)
             }
-            res = requests.get(url, params=params).json()['data']['diff']
 
-            if fund_type == 'CBF':
-                for each in res:
-                    data.append({
-                        'code': each['f12'],
-                        'price': round(float(each['f2']) / 1000, 3),
-                        'change': base.format_decimal(float(each['f3']) / 100, 2)
-                    })
-            else:
-                for each in res:
-                    data.append({
-                        'code': each['f12'],
-                        'price': round(float(each['f2']) / 1000, 3),
-                        'change': base.format_decimal(float(each['f3']) / 100, 2),
-                        'cap': base.format_decimal(float(each['f20']) / 100000000, 1)
-                    })
+            try:    
+                res = stock_source_query(url, params).json()['data']['diff']
+
+                if fund_type == 'CBF':
+                    for each in res:
+                        data.append({
+                            'code': each['f12'],
+                            'price': round(float(each['f2']) / 1000, 3),
+                            'change': base.format_decimal(float(each['f3']) / 100, 2)
+                        })
+                else:
+                    for each in res:
+                        data.append({
+                            'code': each['f12'],
+                            'price': round(float(each['f2']) / 1000, 3),
+                            'change': base.format_decimal(float(each['f3']) / 100, 2),
+                            'cap': base.format_decimal(float(each['f20']) / 100000000, 1)
+                        })
+            except TypeError:
+                data = []
         return data
 
 
@@ -276,8 +323,11 @@ class Sector:
             'fs': 'm:90+t:2+f:!50',
             'fields': 'f3,f12,f13,f14,f104,f105'
         }
-        res = requests.get(url, params=params).json()
-        data = res['data']['diff']
+        try:
+            res = stock_source_query(url, params).json()
+            data = res['data']['diff']
+        except TypeError:
+            data = []
         return data
 
     @staticmethod
@@ -296,17 +346,20 @@ class Sector:
             'fields': 'f3,f12,f104,f105',
             'secids': ','.join(each for each in combine_code)
         }
-        res = requests.get(url, params=params).json()['data']['diff']
-        data = [
-            {
-                'code': each['f12'],
-                'change': base.format_decimal(float(each['f3']) / 100, 2),
-                'rise': each['f104'],
-                'fall': each["f105"]
-            }
-            for i, each in enumerate(res)
-        ] if lists else []
-
+        
+        try:
+            res = stock_source_query(url, params).json()['data']['diff']
+            data = [
+                {
+                    'code': each['f12'],
+                    'change': base.format_decimal(float(each['f3']) / 100, 2),
+                    'rise': each['f104'],
+                    'fall': each["f105"]
+                }
+                for i, each in enumerate(res)
+            ] if lists else []
+        except TypeError:
+            data = []
         return data
 
 
@@ -368,9 +421,13 @@ def quote(market_with_code: str, cat: str, deci):
         'fields': fields,  # f530 为报价数据
         'secid': market_with_code
     }
-    res = requests.get(url, params=params)
-    res = res.json()
-    data = res['data']
+
+    try:
+        res = stock_source_query(url, params)
+        res = res.json()
+        data = res['data']
+    except TypeError:
+        data = []
 
     if data:
         try:
@@ -463,107 +520,109 @@ def trend(request, market_with_code, init, deci):
         'secid': market_with_code
     }
 
-    res = requests.get(url, params=params).json()
-    data = res['data']
+    try:
+        res = stock_source_query(url, params).json()
+        data = res['data']
 
-    close_prev = float(data['preClose'])
-    trends = data['trends']
-    count_trends = len(trends)
+        close_prev = float(data['preClose'])
+        trends = data['trends']
+        count_trends = len(trends)
 
-    for item in trends[index:]:
-        each = item.split(',')
-        timestamp = get_timestamp(each[0], '%Y-%m-%d %H:%M')
-        close = float(each[1])
-        high = max(high, close)
-        low = min(low, close)
+        for item in trends[index:]:
+            each = item.split(',')
+            timestamp = get_timestamp(each[0], '%Y-%m-%d %H:%M')
+            close = float(each[1])
+            high = max(high, close)
+            low = min(low, close)
 
-        delta = close - close_prev
-        percent = delta / close_prev * 100
+            delta = close - close_prev
+            percent = delta / close_prev * 100
 
-        ohlc.append([
-            int(timestamp),
-            float(close),
-            round(float(percent), 2),
-            round(float(delta), deci)
-        ])
-        volume.append([
-            int(timestamp),
-            int(float(each[2]))
-        ])
+            ohlc.append([
+                int(timestamp),
+                float(close),
+                round(float(percent), 2),
+                round(float(delta), deci)
+            ])
+            volume.append([
+                int(timestamp),
+                int(float(each[2]))
+            ])
 
-    index = count_trends - 1
+        index = count_trends - 1
 
-    if index == -1:
-        high = close_prev
-        low = close_prev
-    else:
-        cache_data = {
-            'code': market_with_code,
-            'index': index,
-            'high': high,
-            'low': low
-        }
-        cache.set(cache_key, cache_data, base.configs('cache')['day'])
-
-    tick_gap = max(abs(close_prev - high), abs(close_prev - low))
-    tick_gap = 1.2 * tick_gap if tick_gap > 0 else close_prev * 0.1
-    unit = 10 ** (-deci)
-    tick_itv = max(round(tick_gap / 2, deci), unit)
-    tick_max = round(close_prev + 2 * tick_itv, deci)
-    tick_min = round(close_prev - 2 * tick_itv, deci)
-
-    if init:
-        count_volume = len(volume)
-        open_time = base.configs('time')
-
-        if count_volume > 0:
-            time_start = volume[count_volume - 1][0]
+        if index == -1:
+            high = close_prev
+            low = close_prev
         else:
-            time_start = datetime.date.today().strftime('%Y-%m-%d') + ' ' + open_time['open']
-            time_start = get_timestamp(time_start, '%Y-%m-%d %H:%M')
+            cache_data = {
+                'code': market_with_code,
+                'index': index,
+                'high': high,
+                'low': low
+            }
+            cache.set(cache_key, cache_data, base.configs('cache')['day'])
 
-        date = time.strftime('%Y-%m-%d', time.localtime(time_start / 1000))
+        tick_gap = max(abs(close_prev - high), abs(close_prev - low))
+        tick_gap = 1.2 * tick_gap if tick_gap > 0 else close_prev * 0.1
+        unit = 10 ** (-deci)
+        tick_itv = max(round(tick_gap / 2, deci), unit)
+        tick_max = round(close_prev + 2 * tick_itv, deci)
+        tick_min = round(close_prev - 2 * tick_itv, deci)
 
-        time_points = {
-            'break': open_time['break'],
-            'resume': open_time['resume'],
-            'end': open_time['close']
-        }
+        if init:
+            count_volume = len(volume)
+            open_time = base.configs('time')
 
-        for point_name, point_value in time_points.items():
-            point_time = get_timestamp(f'{date} {point_value}', '%Y-%m-%d %H:%M')
-            time_points[point_name] = point_time
-
-        time_increment = 60000
-        time_start += time_increment
-        placeholder = []
-
-        while time_start < time_points['end']:
-            if time_start < time_points['break']:
-                placeholder.append([time_start, None, None, None])
-            elif time_start < time_points['resume']:
-                time_start = time_points['resume']
-                placeholder.append([time_start, None, None, None])
+            if count_volume > 0:
+                time_start = volume[count_volume - 1][0]
             else:
-                placeholder.append([time_start, None, None, None])
+                time_start = datetime.date.today().strftime('%Y-%m-%d') + ' ' + open_time['open']
+                time_start = get_timestamp(time_start, '%Y-%m-%d %H:%M')
+
+            date = time.strftime('%Y-%m-%d', time.localtime(time_start / 1000))
+
+            time_points = {
+                'break': open_time['break'],
+                'resume': open_time['resume'],
+                'end': open_time['close']
+            }
+
+            for point_name, point_value in time_points.items():
+                point_time = get_timestamp(f'{date} {point_value}', '%Y-%m-%d %H:%M')
+                time_points[point_name] = point_time
+
+            time_increment = 60000
             time_start += time_increment
+            placeholder = []
 
-        ohlc.extend(placeholder)
-        volume.extend([[item[0], None] for item in placeholder])
+            while time_start < time_points['end']:
+                if time_start < time_points['break']:
+                    placeholder.append([time_start, None, None, None])
+                elif time_start < time_points['resume']:
+                    time_start = time_points['resume']
+                    placeholder.append([time_start, None, None, None])
+                else:
+                    placeholder.append([time_start, None, None, None])
+                time_start += time_increment
 
-    return {
-        'pc': close_prev,
-        'high': high,
-        'low': low,
-        'deci': deci,
-        'index': index,
-        'tick_itv': tick_itv,
-        'tick_max': tick_max,
-        'tick_min': tick_min,
-        'ohlc': ohlc,
-        'volume': volume
-    }
+            ohlc.extend(placeholder)
+            volume.extend([[item[0], None] for item in placeholder])
 
+        return {
+            'pc': close_prev,
+            'high': high,
+            'low': low,
+            'deci': deci,
+            'index': index,
+            'tick_itv': tick_itv,
+            'tick_max': tick_max,
+            'tick_min': tick_min,
+            'ohlc': ohlc,
+            'volume': volume
+        }
+    except TypeError:
+        return {}
 
 class Kline:
     """
@@ -682,8 +741,12 @@ class Kline:
             'fields2': 'f51,f52,f53,f54,f55,f56,f58,f59,f61',
             'secid': market_with_code
         }
-        res = requests.get(url, params=params).json()
-        data = res['data']
+
+        try:    
+            res = stock_source_query(url, params).json()
+            data = res['data']
+        except TypeError:
+            data = []
         return data
 
     @staticmethod
