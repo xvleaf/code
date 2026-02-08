@@ -1,0 +1,185 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>
+        添加 {% if data.code %}- {{ data.name }} - {{ data.code }}{% endif %}
+    </title>
+{% endblock %}
+
+{% block refer %}
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'base/lib/tinymce/skins/ui/oxide/skin.min.css' %}" id="mce-u0">
+
+  <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
+  <script src="{% static 'base/lib/tinymce/tinymce.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+    <div id="page-chart" class="page-chart"></div>
+
+    {% if screen != 'full' %}
+      <div id="page-content" class="page-content">
+
+        <form id="main-form" onsubmit="return false;">
+            <div class="col-sm-12 mt-3">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="code" class="form-label">股票代码</label>
+                    <input type="text" id="code" placeholder="股票代码" class="form-control" value="{{ code }}"
+                               onchange="focus_code_change()">
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="name" class="form-label">股票名称</label>
+                    <input type="text" id="name" placeholder="股票名称" class="form-control" value="{{ name }}" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="date" class="form-label">关注日期</label>
+                    <input type="text" id="date" placeholder="关注日期" class="form-control" value="{% now "Y-m-d" %}">
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="priority" class="form-label">关注顺序</label>
+                    <input type="text" id="priority" placeholder="关注顺序" class="form-control">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="under" class="form-label">证券市场</label>
+                    <select id="under" class="form-select" >
+                      <option value="SH" {% if market == '1' %} selected {% endif %}>上海</option>
+                      <option value="SZ" {% if market == '0' %} selected {% endif %}>深圳</option>
+                      <option value="BJ">北京</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="type" class="form-label">证券类型</label>
+
+                    <select id="type" class="form-select">
+                      <option value="S" {% if cat == 'stock' %} selected {% endif %}>股票</option>
+                      <option value="F" {% if cat == 'fund' %} selected {% endif %}>基金</option>
+                      <option value="B">债券</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="intent" class="form-label">交易方向</label>
+                    <select id="intent" class="form-select" onchange="calc_permit_chance('')">
+                      <option value="L" selected>买入</option>
+                      <option value="S">卖出</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="settle" class="form-label">交易类型</label>
+                    <select id="settle" class="form-select">
+                      <option value="1" selected>T+1</option>
+                      <option value="0">T+0</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="price" class="form-label">计划填报</label>
+                    <input id="price" type="text" placeholder="计划交易价格" class="form-control" onchange="calc_permit_chance('')">
+                  </div>
+                  <div class="mb-2">
+                    <label for="target" class="form-label">目标价格</label>
+                    <input id="target" type="text" placeholder="计划目标价格" class="form-control" onchange="calc_permit_chance('')">
+                  </div>
+                  <div class="mb-2">
+                    <label for="stop" class="form-label">止损价格</label>
+                    <input id="stop" type="text" placeholder="计划止损价格" class="form-control" onchange="calc_permit_chance('')">
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="qty" class="form-label">计划数量</label>
+                    <input id="qty" type="text" placeholder="计划交易数量" class="form-control">
+                  </div>
+                  <div class="mb-2">
+                    <label for="permit" class="form-label">允许数量</label>
+                    <input id="permit" type="text" placeholder="允许交易数量" class="form-control" readonly>
+                  </div>
+                  <div class="mb-2">
+                    <label for="chance" class="form-label">成功几率</label>
+                    <input id="chance" type="text" placeholder="交易成功几率" class="form-control" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+        </form>
+
+        <div class="hr-text">
+            <span id="comment-split" class="color-lightgrey">备忘</span>
+        </div>
+
+        <div id="comments-area" class="row">
+          <label for="comments" class="form-label disp-none">备忘</label>
+          <textarea id="comments"></textarea>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="divider-thin-gray"></div>
+            <div class="page-submit d-flex">
+              <a href="javascript:focus_cancel()" class="btn btn-link">取消</a>
+              <a href="javascript:focus_submit('plus', '')" class="btn btn-primary ms-auto">提交</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="page-foot"></div>
+
+    {% endif %}
+
+    <script>
+        if ("{{ code }}") {
+            page_chart_init("{{ market }}.{{ code }}", "{{ view }}");
+            set_page_scroll();
+        }
+
+        $(function () {
+            init_tinymce();
+
+            // 全屏时，临时存储表单数据，返回时自动填充
+            {% if screen == 'norm' %}
+                refill_temp_form_data();
+            {% endif %}
+        })
+    </script>
+
+{% endblock %}

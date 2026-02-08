@@ -1,0 +1,187 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>{{ data.name }} - {{ data.code }}</title>
+{% endblock %}
+
+{% block refer %}
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'base/lib/tinymce/skins/ui/oxide/skin.min.css' %}" id="mce-u0">
+
+  <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
+  <script src="{% static 'base/lib/tinymce/tinymce.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+    <div id="page-chart" class="page-chart"></div>
+
+    {% if screen != 'full' %}
+      <div id="page-content" class="page-content">
+
+        {% with class_now="form-control" %}
+        {% with class_past="form-control color-dimgrey" %}
+
+        <div class="col-sm-12">
+          <div class="row">
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="date" class="form-label">{% if data.event == 'U' %}更新日期{% else %}关注日期{% endif %}</label>
+                <input type="text" id="date" value="{{ data.date | date:'Y-m-d'}}" readonly
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+            </div>
+            <div class="col-md-6 col-sm-6">
+              <form id="main-form" onsubmit="return false;">
+                <div class="mb-2">
+                  <label for="priority" class="form-label">关注顺序</label>
+                  <input id="priority" type="text" value="{{ data.priority }}" placeholder="关注顺序"
+                        {% if pilot_index == 0 or pilot_index == -1 %}
+                            {% if data.priority != 999 %}
+                                class="{{ class_now }} color-purple" onchange="priority_change('{{ data.market }}.{{ data.code }}')"
+                            {% else %}
+                                class="{{ class_now }}" readonly
+                            {% endif %}
+                        {% else %}
+                            class="{{ class_past }}" readonly
+                        {% endif %}
+                  >
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-12">
+          <div class="row">
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="under" class="form-label">证券市场</label>
+                <input type="text" id="under"
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                    value="{% if data.under == 'SH' %}上海{% elif data.under == 'SZ' %}深圳{% else %}北京{% endif %}"
+                    readonly>
+              </div>
+            </div>
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="type" class="form-label">证券类型</label>
+                <input type="text" id="type"
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                    value="{% if data.type == 'S' %}股票{% elif data.type == 'F' %}基金{% else %}债券{% endif %}"
+                    readonly>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-12">
+          <div class="row">
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="intent" class="form-label">交易方向</label>
+                <input id="intent" value="{{ data.get_intent_display }}" type="text" readonly
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+            </div>
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="settle" class="form-label">交易类型</label>
+                <input id="settle" type="text" readonly
+                    {% if data.settle == '0' %} value="T+0" {% else %} value="T+1" {% endif %}
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-sm-12">
+          <div class="row">
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="price" class="form-label">计划填报</label>
+                <input id="price" type="text" value="{{ data.price|floatformat:deci }}" placeholder="计划交易价格" readonly
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+              <div class="mb-2">
+                <label for="target" class="form-label">目标价格</label>
+                <input id="target" type="text" value="{{ data.target|floatformat:deci }}" placeholder="计划目标价格" readonly
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+              <div class="mb-2">
+                <label for="stop" class="form-label">止损价格</label>
+                <input id="stop" type="text" value="{{ data.stop|floatformat:deci }}" placeholder="计划止损价格" readonly
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+            </div>
+
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="qty" class="form-label">计划数量</label>
+                <input id="qty" type="text" value="{{ data.qty|floatformat:0 }}" placeholder="计划交易数量" readonly
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+              <div class="mb-2">
+                <label for="permit" class="form-label">允许数量</label>
+                <input id="permit" type="text" value="{% if aim == 'review' %}-{% else %}{{ permit|floatformat:0 }}{% endif %}" placeholder="允许交易数量" readonly
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+              <div class="mb-2">
+                <label for="chance" class="form-label">成功几率</label>
+                <input id="chance" type="text" value="{{ data.chance|floatformat:0 }}" placeholder="计划成功几率" readonly
+                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                >
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {% endwith %}
+        {% endwith %}
+
+      <div id="chart-comments" class="disp-none">
+            <div class="hr-text">
+                <span id="comment-split" class="color-lightgrey">备忘</span>
+            </div>
+
+            <div class="bg-white">
+                <div id="comments-area" class="row">
+                    <form id="comments-form" onsubmit="save_comment('{{ data.market }}.{{ data.code }}', '{{ data.flow }}');">
+                      <label for="comments" class="form-label disp-none">备忘</label>
+
+                      <textarea id="comments">
+                          {% if data.comments != '' and data.comments != null %}
+                              {{ data.comments }}
+                          {% endif %}
+                      </textarea>
+                    </form>
+                </div>
+            </div>
+          </div>
+      </div>
+
+      <div class="page-foot"></div>
+
+    {% endif %}
+
+    <script>
+        page_chart_init("{{ market }}.{{ code }}", "{{ view }}");
+        set_page_scroll();
+        $(function () {
+            init_tinymce();
+
+            // 全屏时，临时存储表单数据，返回时自动填充
+            {% if screen == 'norm' %}
+                refill_temp_form_data();
+            {% endif %}
+        })
+    </script>
+
+{% endblock %}

@@ -1,0 +1,402 @@
+{% if view == 'trend' %}
+    <div id="trend-area" class="trend-area">
+        <div id="container" class="chart-container"></div>
+    </div>
+
+    <div id="quote-area" class="quote-area">
+        <div>
+          <table>
+            <tr class="line-height-2">
+              <td>
+                <span id="stock-name" class="font-size-3 pointer pad-left-1" onclick="view_mode_change('{{ market }}.{{ code }}', '{{ view }}')">
+                  <strong>{{ name }}</strong>
+                </span>
+                <span id="stock-code"
+                  {% if cat == 'stock' or cat == 'sector' %}
+                      class="font-size-3 pointer"
+                      onclick="jump_to_link('{{ cat }}', '{{ market }}', '{{ code }}')">
+                  {% else %}
+                      class="font-size-3"
+                  {% endif %}
+                  <strong>{{ code }}</strong>
+                </span>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        <div>
+          <table class="quote-table">
+            <tbody>
+              <tr>
+                <td><label class="pad-left-1">卖五</label></td>
+                <td><label id="sq5"></label></td>
+                <td><label id="ss5"></label></td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">卖四</label></td>
+                <td><label id="sq4"></label></td>
+                <td><label id="ss4"></label></td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">卖三</label></td>
+                <td><label id="sq3"></label></td>
+                <td><label id="ss3"></label></td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">卖二</label></td>
+                <td><label id="sq2"></label></td>
+                <td><label id="ss2"></label></td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">卖一</label></td>
+                <td><label id="sq1"></label></td>
+                <td><label id="ss1"></label></td>
+              </tr>
+              <tr>
+                <td colspan="3">
+                  <div class="quote-divider"></div>
+                </td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">买一</label></td>
+                <td><label id="bq1"></label></td>
+                <td><label id="bs1"></label></td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">买二</label></td>
+                <td><label id="bq2"></label></td>
+                <td><label id="bs2"></label></td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">买三</label></td>
+                <td><label id="bq3"></label></td>
+                <td><label id="bs3"></label></td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">买四</label></td>
+                <td><label id="bq4"></label></td>
+                <td><label id="bs4"></label></td>
+              </tr>
+              <tr>
+                <td><label class="pad-left-1">买五</label></td>
+                <td><label id="bq5"></label></td>
+                <td><label id="bs5"></label></td>
+              </tr>
+            </tbody>
+            <tbody>
+              <tr>
+                <td colspan="3">
+                  <div class="quote-divider"></div>
+                </td>
+              </tr>
+            </tbody>
+            <tbody>
+                 <tr>
+                    <td><label class="pad-left-1">昨收</label></td>
+                    <td colspan="2"><label id="pc"></label></td>
+                </tr>
+                <tr>
+                    <td><label class="pad-left-1">现价</label></td>
+                    <td colspan="2"><label id="c"></label></td>
+                </tr>
+                <tr>
+                    <td><label class="pad-left-1">最高</label></td>
+                    <td colspan="2"><label id="h"></label></td>
+                </tr>
+                <tr>
+                    <td><label class="pad-left-1">最低</label></td>
+                    <td colspan="2"><label id="l"></label></td>
+                </tr>
+                <tr>
+                    <td><label class="pad-left-1">涨幅</label></td>
+                    <td colspan="2"><label id="p"></label></td>
+                </tr>
+                <tr>
+                    <td><label class="pad-left-1">市盈</label></td>
+                    <td colspan="2"><label id="pe"></label></td>
+                </tr>
+              </tbody>
+          </table>
+        </div>
+    </div>
+
+    <div class="trend-market">
+        <label id="market-name"></label>
+        <label id="market-price"></label>
+        <label id="market-change"></label>
+        <label id="navi-place"></label>
+    </div>
+
+    <div class="trend-action">
+      <button id="exit-action" class="chart-button" onclick="exit_action('{{ market }}.{{ code }}')"></button>
+      <button id="edit-action" class="chart-button" onclick="edit_action('{{ market }}.{{ code }}')"></button>
+      <button id="deal-action" class="chart-button" onclick="deal_action('{{ market }}.{{ code }}')"></button>
+      <button id="full-screen" class="chart-button" onclick="full_screen('{{ market }}.{{ code }}', '{{ screen }}')"></button>
+    </div>
+
+{% else %}
+    <div id="kline-area" class="kline-area">
+        <div id="container" class="chart-container"></div>
+    </div>
+
+    <div class="kline-name">
+        <label id="navi-place" class="font-size-3"></label>
+        <span id="stock-name" class="font-size-3 pointer pad-left-1" onclick="view_mode_change('{{ market }}.{{ code }}', '{{ view }}')">
+          <strong>{{ name }}</strong>
+        </span>
+        <span id="stock-code"
+          {% if cat == 'stock' or cat == 'sector' %}
+              class="font-size-3 pointer"
+              onclick="jump_to_link('{{ cat }}', '{{ market }}', '{{ code }}')">
+          {% else %}
+              class="font-size-3"
+          {% endif %}
+          <strong>{{ code }}</strong>
+        </span>
+    </div>
+
+    <div class="kline-value">
+      <table class="line-height-1">
+        <tr>
+          <td>
+            <label id="close" class="font-size-2"></label>
+            <label id="s1" class="font-size-2"></label>
+            <label id="percent" class="font-size-2"></label>
+            <label id="s2" class="font-size-2"></label>
+            <label id="ma" class="font-size-2 color-orange"></label>
+            <label id="s3" class="font-size-2"></label>
+            <label id="mv" class="font-size-2 color-black"></label>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <label id="tp" class="font-size-2 color-lightgrey"></label>
+            <label id="s4" class="font-size-2"></label>
+            <label id="up" class="font-size-2 color-lightblue"></label>
+            <label id="s5" class="font-size-2"></label>
+            <label id="av" class="font-size-2 color-black"></label>
+            <label id="s6" class="font-size-2"></label>
+            <label id="lw" class="font-size-2 color-lightblue"></label>
+            <label id="s7" class="font-size-2"></label>
+            <label id="fl" class="font-size-2 color-lightgrey"></label>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div id="kline-param" class="kline-param">
+      <span>k</span>
+      <div id="k-value" contenteditable="true" class="kline-textbox"></div>
+      <span>d</span>
+      <div id="d-value" contenteditable="true" class="kline-textbox"></div>
+
+      <button id="right" class="chart-button" onclick="right_change('{{ market }}.{{ code }}')"></button>
+      <button id="period-day" class="chart-button" onclick="period_change('{{ market }}.{{ code }}', 'day')"></button>
+      <button id="period-week" class="chart-button" onclick="period_change('{{ market }}.{{ code }}', 'week')"></button>
+      <button id="period-month" class="chart-button" onclick="period_change('{{ market }}.{{ code }}', 'month')"></button>
+      <button id="full-screen" class="chart-button" onclick="full_screen('{{ market }}.{{ code }}', '{{ screen }}')"></button>
+    </div>
+
+{% endif %}
+
+{% if navi %}
+
+    {% if site == 'focus/view' or site == 'trans/view' or site == 'review/trans/view' or site == 'review/focus/view' %}
+      <div class="view-action line-height-3 disp-h-center">
+        {% if screen != 'full'%}
+          <div class="navi-height" onclick="chart_show_comment()">
+            <span id="show-comment" class="margin-right-2 pointer">
+                <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"
+                     stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M13 20l7 -7"></path>
+                    <path d="M13 20v-6a1 1 0 0 1 1 -1h6v-7a2 2 0 0 0 -2 -2h-12a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7"></path>
+                </svg>
+            </span>
+          </div>
+        {% endif %}
+
+        <div class="navi-height" onclick="chart_goback_list()">
+          <span id="goback" class="margin-left-2 pointer">
+              <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"
+                   stroke-linecap="round"  stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M9 6l11 0"></path>
+                  <path d="M9 12l11 0"></path>
+                  <path d="M9 18l11 0"></path>
+                  <path d="M5 6l0 .01"></path>
+                  <path d="M5 12l0 .01"></path>
+                  <path d="M5 18l0 .01"></path>
+              </svg>
+          </span>
+        </div>
+      </div>
+    {% endif %}
+
+    <div id="chart-navi" class="chart-navi">
+      <div class="d-flex width-100">
+        <div class="d-flex">
+          <div class="navi-height" {% if navi_prev %}onclick="navi_view_change('{{ market }}.{{ code }}', 'navi', 'prev')"{% endif %}>
+              <span class="line-height-3 pad-right-2 pad-left-5 {% if navi_prev %}color-black pointer{% else %}color-lightgrey{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"
+                   stroke-linecap="round" stroke-linejoin="round">
+                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                   <path d="M12 21a9 9 0 1 0 0 -18a9 9 0 0 0 0 18"></path>
+                   <path d="M8 12l4 4"></path>
+                   <path d="M8 12h8"></path>
+                   <path d="M12 8l-4 4"></path>
+                </svg>
+              </span>
+          </div>
+          {% if pilot %}
+            <div class="navi-height" {% if pilot_prev %}onclick="navi_view_change('{{ market }}.{{ code }}', 'pilot', 'prev')"{% endif %}>
+              <span class="line-height-3 pad-left-2 pad-right-5 {% if pilot_prev %}color-black pointer{% else %}color-lightgrey{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"
+                   stroke-linecap="round" stroke-linejoin="round">
+                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                   <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                   <path d="M12 8l-4 4"></path>
+                   <path d="M12 8v8"></path>
+                   <path d="M16 12l-4 -4"></path>
+                </svg>
+              </span>
+            </div>
+          {% endif %}
+        </div>
+        <div class="d-flex">
+          {% if pilot %}
+            <div class="navi-height" {% if pilot_next %}onclick="navi_view_change('{{ market }}.{{ code }}', 'pilot', 'next')"{% endif %}>
+              <span class="line-height-3 pad-left-5 pad-right-2 {% if pilot_next %}color-black pointer{% else %}color-lightgrey{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"
+                   stroke-linecap="round" stroke-linejoin="round">
+                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                   <path d="M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0"></path>
+                   <path d="M8 12l4 4"></path>
+                   <path d="M12 8v8"></path>
+                   <path d="M16 12l-4 4"></path>
+                </svg>
+              </span>
+            </div>
+          {% endif %}
+
+          <div class="navi-height" {% if navi_next %}onclick="navi_view_change('{{ market }}.{{ code }}', 'navi', 'next')"{% endif %}>
+              <span class="line-height-3 pad-left-2 pad-right-5 {% if navi_next %} color-black pointer{% else %}color-lightgrey{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none"
+                   stroke-linecap="round" stroke-linejoin="round">
+                   <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                   <path d="M12 3a9 9 0 1 0 0 18a9 9 0 0 0 0 -18"></path>
+                   <path d="M16 12l-4 -4"></path>
+                   <path d="M16 12h-8"></path>
+                   <path d="M12 16l4 -4"></path>
+                </svg>
+              </span>
+          </div>
+        </div>
+      </div>
+    </div>
+{% endif %}
+
+<script>
+    $(function () {
+        const screen_element = $("#full-screen");
+        {% if screen == 'full' %}
+            screen_element.html(icon_minimize);
+        {% else %}
+            screen_element.html(icon_maximize);
+        {% endif %}
+
+        {% if navi %}
+            let navi_index = parseInt("{{ navi_index }}") + 1;
+            let navi_count = "{{ navi_count }}";
+            document.getElementById("navi-place").innerText = parseInt(navi_count) > 1 ? `(${navi_index}/${navi_count})` : '';
+        {% endif %}
+
+        {% if view == 'kline' %}
+            kline_init("{{ cat }}", "{{ market }}.{{ code }}");
+            set_kline_param();
+        {% else %}
+            trend_init("{{ cat }}", "{{ market }}.{{ code }}", {{ trend_act|safe }});
+
+            quote_itv = setInterval(
+                function() {
+                    get_quote_data("{{ cat }}", "{{ market }}.{{ code }}");
+                },
+                {{ interval }}
+            );
+
+            trend_itv = setInterval(
+                function () {
+                    get_trend_data("{{ cat }}", "{{ market }}.{{ code }}");
+                    update_trend();
+                },
+                {{ interval }}
+            );
+        {% endif %}
+    })
+
+    {% if view == 'kline' %}
+        document.getElementById("k-value").addEventListener("click", function() {
+            const kDiv = document.getElementById("k-value");
+            ema_param_change('{{ market }}.{{ code }}', 'k', kDiv);
+        });
+
+        document.getElementById("d-value").addEventListener("click", function() {
+            const dDiv = document.getElementById("d-value");
+            ema_param_change('{{ market }}.{{ code }}', 'd', dDiv);
+        });
+    {%  endif %}
+
+    // 监听键盘事件
+    document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('keydown', function(event) {
+            // 当焦点在备忘输入框时抑制键盘监听
+            if (document.activeElement.tagName === 'comments' || !document.getElementById('chart-navi')) {
+                return;
+            }
+
+            switch (event.key) {
+                case 'ArrowUp':
+                    {% if pilot_prev %}
+                        navi_view_change('{{ market }}.{{ code }}', 'pilot', 'prev');
+                        event.preventDefault(); // 阻止默认箭头滚动行为
+                    {% endif %}
+                    break;
+                case 'ArrowDown':
+                    {% if pilot_next %}
+                        navi_view_change('{{ market }}.{{ code }}', 'pilot', 'next');
+                        event.preventDefault(); 
+                    {% endif %}
+                    break;
+                case 'ArrowLeft':
+                    {% if navi_prev %}
+                        navi_view_change('{{ market }}.{{ code }}', 'navi', 'prev');
+                        event.preventDefault(); 
+                    {% endif %}
+                    break;
+                case 'ArrowRight':
+                    {% if navi_next %}
+                        navi_view_change('{{ market }}.{{ code }}', 'navi', 'next');
+                        event.preventDefault(); 
+                    {% endif %}
+                    break;
+                case 'm':
+                    period_change('{{ market }}.{{ code }}', 'month');
+                    break;
+                case 'w':
+                    period_change('{{ market }}.{{ code }}', 'week');
+                    break;
+                case 'd':
+                    period_change('{{ market }}.{{ code }}', 'day');
+                    break;
+                case 'f':
+                    full_screen('{{ market }}.{{ code }}', '{{ screen }}');
+                    break;
+                case 'r':
+                    right_change('{{ market }}.{{ code }}');
+                    break;
+            }
+        });
+    });
+
+</script>

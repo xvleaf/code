@@ -1,0 +1,151 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>板块</title>
+{% endblock %}
+
+{% block content %}
+
+    <div class="page-content">
+      <div class="card card-body">
+        <table id="table-list" class="table">
+        <thead>
+          <tr class="sticky-top table-title-background">
+            <th class="table-title-text">
+                <span class="pointer" onclick="sector_list_order('{{ order_type }}', 'code')">
+                  代码
+                </span>
+            </th>
+            <th class="table-title-text">板块</th>
+            <th class="table-title-text">
+                <span class="pointer" onclick="sector_list_order('{{ order_type }}', 'change')">
+                  涨幅
+                </span>
+            </th>
+            <th class="table-title-text">
+                <span class="pointer" onclick="sector_list_order('{{ order_type }}', 'rise')">
+                  上涨
+                </span>
+            </th>
+            <th class="table-title-text">
+                <span class="pointer" onclick="sector_list_order('{{ order_type }}', 'fall')">
+                  下跌
+                </span>
+            </th>
+            <th class="table-title-text">
+                <span class="pointer" onclick="sector_list_order('{{ order_type }}', 'mark')">
+                  标记
+                </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="table-tbody">
+          <tr>
+              <td colspan="6" class="table-divider-market"></td>
+          </tr>
+
+          {% for list in lists %}
+            <tr>
+              <td class="table-cell-text">
+                  <a id="code-{{ list.code }}" href="/sector/view/{{ list.market }}.{{ list.code }}">{{ list.code }}</a>
+              </td>
+              <td class="table-cell-text">
+                  <label id="name-{{ list.code }}">{{ list.name }}</label>
+              </td>
+              <td class="table-cell-text">
+                  <label id="change-{{ list.code }}"></label>
+              </td>
+              <td class="table-cell-text">
+                  <label id="rise-{{ list.code }}"></label>
+              </td>
+              <td class="table-cell-text">
+                  <label id="fall-{{ list.code }}"></label>
+              </td>
+              <td class="table-cell-text">
+                  {% if list.mark %}
+                    <label id="mark-{{ list.code }}" style="color:
+                            {% if list.mark == 1 %}
+                                #228B22
+                            {% elif list.mark == 2 %}
+                                darksalmon
+                            {% endif %}">
+                      {{ list.get_mark_display }}
+                    </label>
+                  {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+
+        <div class="width-100 disp-h-center">
+          <span class="
+            {% if page_number > 1 %}
+                pointer color-dimgrey" onclick="list_page_action('click', 'prev', '{{ page_number }}', '{{ order_type }}')">
+            {% else %}
+                color-lightgrey">
+            {% endif %}
+
+            <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                 stroke-linecap="round" stroke-linejoin="round">
+               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+               <path d="M15 6l-6 6l6 6"></path>
+            </svg>
+          </span>
+
+          <div class="disp-h-center disp-v-center width-100px">
+            <div id="page-number" contenteditable="true" class="general-textbox">{{ page_number }}</div>
+            <span>/</span>
+            <span>{{ page_total }}</span>
+          </div>
+
+          <span class="
+            {% if page_number < page_total %}
+                pointer color-dimgrey" onclick="list_page_action('click', 'next', '{{ page_number }}', '{{ order_type }}')">
+            {% else %}
+                color-lightgrey">
+            {% endif %}
+
+            <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                 stroke-linecap="round" stroke-linejoin="round">
+               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+               <path d="M9 6l6 6l-6 6"></path>
+            </svg>
+          </span>
+
+          <label for="sector-refresh" class="form-label"></label>
+          <div style="position:absolute; right: 20px;">
+            <span id="sector-refresh" class="pointer" onclick="sector_list_refresh()">
+                <svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                     fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                    <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"></path>
+                    <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"></path>
+                </svg>
+            </span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="page-foot"></div>
+
+    <script>
+        document.getElementById("table-list").style.opacity = '0';
+        sector_list_update();
+        document.getElementById("table-list").style.opacity = '100';
+
+        setInterval(
+            function() {sector_list_update();},
+            {{ interval }}
+        );
+
+        document.getElementById("page-number").addEventListener("click", function() {
+            const pageNumberDiv = document.getElementById("page-number");
+            list_page_listen (pageNumberDiv, {{ page_total }}, '{{ order_type }}')
+        });
+    </script>
+
+{% endblock %}

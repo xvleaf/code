@@ -1,0 +1,209 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>筛选 - 执行</title>
+{% endblock %}
+
+{% block refer %}
+{% endblock %}
+
+{% block content %}
+
+    <div id="page-content" class="page-content form-style">
+      {% for each in criteria %}
+        <div class="pad-left-2 mt-1 font-bold">条件{{ forloop.counter }}:</div>
+
+        <div class="disp-flex-left pad-left-2">
+          <label for="cat-{{ each.index }}" class="filter-text"></label>
+          <select id="cat-{{ each.index }}" class="filter-select"
+                  onchange="filter_changed('{{ each.index }}', 'cat', {{ default }})">
+            <option value="P" {% if each.cat == 'P' %}selected{% endif %}>收盘价</option>
+            <option value="V" {% if each.cat == 'V' %}selected{% endif %}>成交量</option>
+            <option value="E" {% if each.cat == 'E' %}selected{% endif %}>EMA</option>
+            <option value="M" {% if each.cat == 'M' %}selected{% endif %}>MA</option>
+          </select>
+
+          <label for="right-{{ each.index }}" class="filter-text">[</label>
+          <select id="right-{{ each.index }}" class="filter-select">
+            <option value="adj" {% if each.right == 'adj' %}selected{% endif %}>复权</option>
+            <option value="div" {% if each.right == 'div' %}selected{% endif %}>除权</option>
+          </select>
+
+          <div id="cat-em-{{ each.index }}" class="{% if each.cat == 'P' or each.cat == 'V' %}disp-none{% else %}disp-flex-left{% endif %}">
+              <label class="filter-text">,</label>
+
+              <label id="k1-label-{{ each.index }}" for="k1-value-{{ each.index }}"
+                     class="filter-text pad-left-1 {% if each.cat != 'E' %}disp-none{% endif %}">k</label>
+              <input id="k1-value-{{ each.index }}" type="text" value="{{ each.k1 }}"
+                     class="filter-text width-35px {% if each.cat != 'E' %}disp-none{% else %}disp-h-center{% endif %}">
+
+              <label id="em-split-{{ each.index }}" class="filter-text {% if each.cat != 'E' %}disp-none{% endif %}">,</label>
+
+              <label id="d1-label-{{ each.index }}" for="d1-value-{{ each.index }}"
+                     class="filter-text pad-left-1">d</label>
+              <input id="d1-value-{{ each.index }}" type="text" value="{{ each.d1 }}"
+                     class="filter-text width-35px disp-h-center">
+          </div>
+
+          <div id="cat-pv-{{ each.index }}" class="{% if each.cat == 'E' or each.cat == 'M' %}disp-none{% else %}disp-flex-left{% endif %}">
+              <label for="adjust-{{ each.index }}" class="filter-text">,</label>
+              <select id="adjust-{{ each.index }}" class="filter-select">
+                <option value="1" {% if each.adjust == '1' %}selected{% endif %}>+</option>
+                <option value="-1" {% if each.adjust == '-1' %}selected{% endif %}>−</option>
+              </select>
+
+              <input id="gap-{{ each.index }}" type="text" value="{{ each.gap }}" class="filter-text disp-h-center width-35px">
+              <label for="gap-{{ each.index }}" class="filter-text">%</label>
+          </div>
+
+          <label for="period-{{ each.index }}" class="filter-text pad-left-1">]</label>
+
+          <label for="exist-{{ each.index }}" class="filter-text pad-left-1">在</label>
+          <input id="exist-{{ each.index }}" type="text" value="{{ each.exist }}" class="filter-text disp-h-center width-35px">
+
+          <label for="range-{{ each.index }}" class="filter-text">/</label>
+          <input id="range-{{ each.index }}" type="text" value="{{ each.range }}" class="filter-text disp-h-center width-35px">
+
+          <select id="period-{{ each.index }}" class="filter-select">
+            <option value="day" {% if each.period == 'day' %}selected{% endif %}>日</option>
+            <option value="week" {% if each.period == 'week' %}selected{% endif %}>周</option>
+            <option value="month" {% if each.period == 'month' %}selected{% endif %}>月</option>
+          </select>
+        </div>
+
+        <div class="disp-flex pad-left-2">
+          <div id="filter-em-{{ each.index }}" class="{% if each.cat == 'P' or each.cat == 'V' %}disp-none{% else %}disp-flex-left{% endif %}">
+              <label for="em-link-{{ each.index }}" class="filter-text"></label>
+              <select id="em-link-{{ each.index }}" class="filter-select color-orange"
+                     onchange="filter_changed('{{ each.index }}', 'em-link', {{ default }})">
+                <!-- Line -->
+                <option value="L" {% if each.link == 'L' %}selected{% endif %}>趋势</option>
+                <!-- Speedup -->
+                <option value="S" {% if each.link == 'S' %}selected{% endif %}>加速</option>
+                <!-- Box -->
+                <option value="B" {% if each.link == 'B' %}selected{% endif %}>波动</option>
+              </select>
+
+              <label for="link-ls-{{ each.index }}" class="filter-text"></label>
+              <select id="link-ls-{{ each.index }}" class="filter-select {% if each.link == 'B' %}disp-none{% endif %}">
+                <option value="U" {% if each.filter == 'U' %}selected{% endif %}>向上</option>
+                <option value="D" {% if each.filter == 'D' %}selected{% endif %}>向下</option>
+              </select>
+
+              <div id="link-b-{{ each.index }}" class="{% if each.link == 'B' %}disp-flex-left{% else %}disp-none{% endif %}">
+                  <input id="link-b-value-{{ each.index }}" type="text" value="{{ each.set }}" class="filter-text width-35px disp-h-center">
+                  <label id="link-b-label-{{ each.index }}" for="link-b-value-{{ each.index }}" class="filter-text pad-left-1">%</label>
+              </div>
+          </div>
+
+          <div id="filter-pv-{{ each.index }}" class="{% if each.cat == 'E' or each.cat == 'M' %}disp-none{% else %}disp-flex-left{% endif %}">
+              <label for="pv-link-{{ each.index }}" class="filter-text"></label>
+              <select id="pv-link-{{ each.index }}" class="filter-select color-orange">
+                <!-- Less -->
+                <option value="L" {% if each.link == 'L' %}selected{% endif %}><</option>
+                <!-- Surpass -->
+                <option value="S" {% if each.link == 'S' %}selected{% endif %}>></option>
+              </select>
+
+              <div class="pad-left-2"></div>
+
+              <label for="price-filter-{{ each.index }}" class="filter-text"></label>
+              <select id="price-filter-{{ each.index }}"
+                     class="{% if each.cat != 'P' %}disp-none{% else %}filter-select{% endif %}"
+                     onchange="filter_changed('{{ each.index }}', 'filter-p', {{ default }})">
+                <option value="E" {% if each.filter == 'E' %}selected{% endif %}>EMA</option>
+                <option value="M" {% if each.filter == 'M' %}selected{% endif %}>MA</option>
+                <option value="A" {% if each.filter == 'A' %}selected{% endif %}>振幅</option>
+                <option value="P" {% if each.filter == 'P' %}selected{% endif %}>价格</option>
+              </select>
+
+              <label for="volume-filter-{{ each.index }}" class="filter-text"></label>
+              <select id="volume-filter-{{ each.index }}"
+                     class="{% if each.cat != 'V' %}disp-none{% else %}filter-select{% endif %}"
+                     onchange="filter_changed('{{ each.index }}', 'filter-v', {{ default }})">
+                <option value="M" {% if each.filter == 'M' %}selected{% endif %}>MA</option>
+                <option value="A" {% if each.filter == 'A' %}selected{% endif %}>振幅</option>
+              </select>
+
+              <div id="option-pa-{{ each.index }}" class="{% if each.filter == 'E' or each.filter == 'M' %}disp-none{% else %}disp-flex-left{% endif %}">
+                  <input id="set-value-{{ each.index }}" type="text" value="{{ each.set }}" class="filter-text width-35px disp-h-center">
+
+                  <label id="set-label-{{ each.index }}" for="set-value-{{ each.index }}"
+                         class="filter-text pad-left-1 {% if each.filter != 'A' %}disp-none{% endif %}">%</label>
+              </div>
+
+              <div id="option-em-{{ each.index }}" class="{% if each.filter == 'P' or each.filter == 'A' %}disp-none{% else %}disp-flex-left{% endif %}">
+                  <label id="bracket-l-label-{{ each.index }}" for="bracket-l-{{ each.index }}" class="filter-text">[</label>
+
+                  <label id="k2-label-{{ each.index }}" for="k2-value-{{ each.index }}"
+                         class="filter-text pad-left-1 {% if each.filter != 'E' %}disp-none{% endif %}">k</label>
+                  <input id="k2-value-{{ each.index }}" type="text" value="{{ each.k2 }}"
+                         class="filter-text width-35px {% if each.filter != 'E' %}disp-none{% else %}disp-h-center{% endif %}">
+
+                  <label id="option-split-1-{{ each.index }}" class="filter-text {% if each.filter != 'E' %}disp-none{% endif %}">,</label>
+
+                  <label id="d2-label-{{ each.index }}" for="d2-value-{{ each.index }}" class="filter-text pad-left-1">d</label>
+                  <input id="d2-value-{{ each.index }}" type="text" value="{{ each.d2 }}" class="filter-text width-35px disp-h-center">
+
+                  <label id="option-split-2-{{ each.index }}" class="filter-text {% if each.filter != 'E' %}disp-none{% endif %}">,</label>
+
+                  <label id="curve-label-{{ each.index }}" for="curve-select-{{ each.index }}" class="filter-text"></label>
+                  <select id="curve-select-{{ each.index }}" class="filter-select {% if each.filter != 'E' %}disp-none{% endif %}">
+                    <option value="TP" {% if each.curve == 'TP' %}selected{% endif %}>TP</option>
+                    <option value="UP" {% if each.curve == 'UP' %}selected{% endif %}>UP</option>
+                    <option value="AV" {% if each.curve == 'AV' %}selected {% endif %}>AV</option>
+                    <option value="LW" {% if each.curve == 'LW' %}selected{% endif %}>LW</option>
+                    <option value="FL" {% if each.curve == 'FL' %}selected{% endif %}>FL</option>
+                  </select>
+
+                  <label id="bracket-r-label-{{ each.index }}" class="filter-text">]</label>
+              </div>
+          </div>
+
+          <div class="disp-flex pointer">
+            <span class="pad-right-2" onclick="filter_run_func('del', {{ each.index }}, {{ count }})">
+                <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                     fill="none" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M18 6l-12 12"></path>
+                  <path d="M6 6l12 12"></path>
+                </svg>
+            </span>
+          </div>
+        </div>
+      {% endfor %}
+
+      <div class="divider-thin-gray height-25px"></div>
+
+      <div class="row pad-btm-1">
+        <div>
+          <div class="page-submit d-flex">
+            <a href="javascript:filter_run_func('add', {{ count }}, {{ count }})" class="btn btn-link">添加条件</a>
+            <a id="submit-link" href="javascript:filter_run_submit({{ count }})" class="btn btn-primary ms-auto">
+                {% if running == 1 %}终止筛选[0%]{% else %}筛选{% endif %}
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-foot"></div>
+
+    <script>
+        {% if running == 1 or running == 2 %}
+            setInterval(
+                function() {
+                    let link = document.getElementById('submit-link');
+                    let url = `filter/run`;
+                    let post = {"func": 'check'};
+                    let data = ajax_sync(url, post);
+                    if (data['running'] === 1 || data['running'] === 2) {
+                        link.innerText = `终止筛选[${data['percent']}]`;
+                    } else {
+                        location.reload();
+                    }
+                }, 5000
+            );
+        {% endif %}
+    </script>
+{% endblock %}

@@ -1,0 +1,71 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>交易</title>
+{% endblock %}
+
+{% block content %}
+
+    <div class="page-content">
+      <div class="card card-body">
+        <table id="table-list" class="table">
+        <thead>
+          <tr class="sticky-top table-title-background">
+            <th class="table-title-text">代码</th>
+            <th class="table-title-text">名称</th>
+            <th class="table-title-text">价格</th>
+            <th class="table-title-text">涨幅</th>
+            <th class="table-title-text">目标</th>
+            <th class="table-title-text">止损</th>
+            <th class="disp-none">DECI</th>
+          </tr>
+        </thead>
+        <tbody class="table-tbody">
+          {% for list in lists %}
+            <tr>
+              <td colspan="6" class="table-divider-market"></td>
+            </tr>
+
+            <tr>
+              <td class="table-cell-text">
+                  <a id="code-{{ list.code }}" href="/trans/view/{{ list.market }}.{{ list.code }}">{{ list.code }}</a>
+              </td>
+              <td class="table-cell-text">
+                  <label id="name-{{ list.code }}"></label>
+              </td>
+              <td class="table-cell-text">
+                  <label id="close-{{ list.code }}"></label>
+              </td>
+              <td class="table-cell-text">
+                  <label id="change-{{ list.code }}"></label>
+              </td>
+              <td class="table-cell-text">
+                  <label id="target-{{ list.code }}">{{ list.target|floatformat:list.deci }}</label>
+              </td>
+              <td class="table-cell-text">
+                  <label id="stop-{{ list.code }}">{{ list.stop|floatformat:list.deci }}</label>
+              </td>
+              <td class="disp-none">
+                  <label id="deci-{{ list.code }}">{{ list.deci }}</label>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page-foot"></div>
+
+    <script>
+        document.getElementById("table-list").style.opacity = '0';
+        update_stock_list();
+        document.getElementById("table-list").style.opacity = '100';
+
+        setInterval(
+            function() {update_stock_list();},
+            {{ interval }}
+        );
+    </script>
+
+{% endblock %}

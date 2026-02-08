@@ -1,0 +1,24 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>{{ name }} - {{ code }}</title>
+{% endblock %}
+
+{% block refer %}
+  {% load static %}
+  <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
+  <script src="{% static 'base/lib/tinymce/tinymce.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div id="page-chart" class="page-chart"></div>
+
+    {% if screen != 'full' %}
+      <div class="page-foot"></div>
+    {% endif %}
+
+    <script>
+        page_chart_init("{{ market }}.{{ code }}", "{{ view }}");
+    </script>
+
+{% endblock %}

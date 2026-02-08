@@ -1,0 +1,187 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>{{ data.name }} - {{ data.code }}</title>
+{% endblock %}
+
+{% block refer %}
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'base/lib/tinymce/skins/ui/oxide/skin.min.css' %}" id="mce-u0">
+
+  <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
+  <script src="{% static 'base/lib/tinymce/tinymce.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+    <div id="page-chart" class="page-chart"></div>
+
+    {% if screen != 'full' %}
+      <div id="page-content" class="page-content">
+
+        {% with class_now="form-control" %}
+        {% with class_past="form-control color-dimgrey" %}
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="date" class="form-label">{% if data.event == 'U' %}更新日期{% else %}成交日期{% endif %}</label>
+                    <input id="date" type="text" value="{{ data.date | date:'Y-m-d'}}"
+                           class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }} color-purple{% else %}{{ class_past }}{% endif %}"
+                    >
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="cost" class="form-label">持仓成本</label>
+                    <input id="cost" type="text" value="{{ data.cost|floatformat:deci }}" readonly
+                           class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {% if aim == 'update' and data.event == 'U' %}<div class="disp-none">{% endif %}
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="intent" class="form-label">交易方向</label>
+                        <input id="intent" type="text" value="{{ data.get_intent_display }}" readonly
+                               class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                        >
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="settle" class="form-label">交易类型</label>
+                        <input id="settle" type="text" value="{{ data.get_settle_display }}" readonly
+                               class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="gross" class="form-label">平均价格</label>
+                        <input id="gross" type="text" value="{{ data.gross|floatformat:deci }}" readonly
+                               class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                        >
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        {% if aim != 'review' %}
+                            <label for="position" class="form-label">股票数量</label>
+                            <input id="position" type="text" value="{{ data.position|floatformat:2 }}" readonly
+                                   class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                            >
+                        {% else %}
+                            <label for="price" class="form-label">成交价格</label>
+                            <input id="price" type="text" value="{{ data.price|floatformat:2 }}" readonly
+                                   class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                            >
+                        {% endif %}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            {% if aim == 'update' and data.event == 'U' %}</div>{% endif %}
+
+            {% if aim != 'review'%}
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="target" class="form-label">目标价格</label>
+                        <input id="target" type="text" value="{{ data.target|floatformat:deci }}" placeholder="目标价格"
+                               {% if pilot_index == 0 or pilot_index == -1 %} onchange="submit_deal_data('{{ data.code }}')" {% else %} readonly {% endif %}
+                               class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }} color-purple{% else %}{{ class_past }}{% endif %}"
+                        >
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="stop" class="form-label">止损价格</label>
+                        <input id="stop" type="text" value="{{ data.stop|floatformat:deci }}" placeholder="止损价格"
+                               {% if pilot_index == 0 or pilot_index == -1 %} onchange="submit_deal_data('{{ data.code }}')" {% else %} readonly {% endif %}
+                               class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }} color-purple{% else %}{{ class_past }}{% endif %}"
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="chance" class="form-label">成功几率</label>
+                        <input id="chance" type="text" value="{{ data.chance }}" placeholder="交易成功几率" readonly
+                               class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                        >
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="risk" class="form-label">风险资金</label>
+                        <input id="risk" type="text" value="{{ data.risk|floatformat:2 }}" placeholder="可能损失金额" readonly
+                               class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
+                        >
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            {% endif %}
+
+        {% endwith %}
+        {% endwith %}
+
+        <div id="chart-comments" class="disp-none">
+            <div class="hr-text">
+                <span id="comment-split" class="color-lightgrey">备忘</span>
+            </div>
+
+            <div class="bg-white">
+                <div id="comments-area" class="row">
+                    <form id="comments-form" onsubmit="save_comment('{{ data.market }}.{{ data.code }}', '{{ data.flow }}');">
+                      <label for="comments" class="form-label disp-none">备忘</label>
+
+                      <textarea id="comments">
+                          {% if data.comments != '' and data.comments != null %}
+                              {{ data.comments }}
+                          {% endif %}
+                      </textarea>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+      </div>
+
+      <div class="page-foot"></div>
+
+    {% endif %}
+
+    <script>
+        page_chart_init("{{ market }}.{{ code }}", "{{ view }}");
+        set_page_scroll();
+
+        $(function () {
+            init_tinymce();
+
+            // 全屏时，临时存储表单数据，返回时自动填充
+            {% if screen == 'norm' %}
+                refill_temp_form_data();
+            {% endif %}
+        })
+    </script>
+
+{% endblock %}

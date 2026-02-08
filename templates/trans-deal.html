@@ -1,0 +1,234 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>
+        交易 - {{ data.name }} - {{ data.code }}
+    </title>
+{% endblock %}
+
+{% block refer %}
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'base/lib/tinymce/skins/ui/oxide/skin.min.css' %}" id="mce-u0">
+
+  <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
+  <script src="{% static 'base/lib/tinymce/tinymce.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+    <div id="page-chart" class="page-chart"></div>
+
+    {% if screen != 'full' %}
+      <div id="page-content" class="page-content">
+
+        <form id="main-form" onsubmit="return false;">
+            <div class="col-sm-12 mt-3">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="code" class="form-label">股票代码</label>
+                    <input type="text" id="code" value="{{ data.code }}" class="form-control" readonly>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="name" class="form-label">股票名称</label>
+                    <input type="text" id="name" value="{{ data.name }}" class="form-control" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id='stock-under' {% if data.cat == 'deal' %} class="disp-none" {% endif %}>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="under" class="form-label">证券市场</label>
+                        <input id="under" type="text" class="form-control"
+                            value="{% if data.under != 'SZ' %}上海{% elif data.under == 'SZ' %}深圳{% else %}北京{% endif %}"
+                            readonly>
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="type" class="form-label">证券类型</label>
+                        <input id="type" type="text" class="form-control"
+                            value="{% if data.type == 'S' %}股票{% elif data.type == 'F' %}基金{% else %}债券{% endif %}"
+                            readonly>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="date" class="form-label">成交日期</label>
+                    <input type="text" id="date" value="{{ data.date | date:'Y-m-d'}}" placeholder="成交日期" class="form-control">
+                  </div>
+                </div>
+
+                <div id="stock-profit" class="col-md-6 col-sm-6 {% if data.status == 1 %}disp-none{% endif %}">
+                  <div class="mb-2">
+                    <label for="profit" class="form-label">实际收益</label>
+                    <input id="profit" type="text" class="form-control" placeholder="全部收益" value="{{ data.profit|floatformat:2 }}">
+                  </div>
+                </div>
+
+                <div id="stock-cost" class="col-md-6 col-sm-6 {% if data.status != 1 %}disp-none{% endif %}">
+                  <div class="mb-2">
+                    <label for="cost" class="form-label">持仓成本</label>
+                    <input id="cost" type="text" class="form-control" value="{{ data.cost|floatformat:2 }}" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="intent" class="form-label">交易方向</label>
+                    <select id="intent" class="form-select" onchange="deal_intent_changed('{{ data.cat }}', '{{ data.code }}')">
+                      <option value="L" {% if data.intent == 'L' %} selected {% endif %}>买入</option>
+                      <option value="S" {% if data.intent == 'S' %} selected {% endif %}>卖出</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="settle" class="form-label">交易类型</label>
+                    <input id="settle" type="text" class="form-control" value="{% if data.settle == 0 %}T+0{% else %}T+1{% endif %}" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="price" class="form-label">成交价格</label>
+                    <input id="price" type="text" value="{{ data.price|floatformat:data.deci }}" placeholder="成交价格"
+                           class="form-control" onchange="calc_deal_data('{{ data.cat }}', '{{ data.code }}', 'price')">
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="qty" class="form-label">成交数量</label>
+                    <input id="qty" type="text" value="{{ data.qty|floatformat:2 }}" placeholder="成交数量"
+                           class="form-control" onchange="calc_deal_data('{{ data.cat }}', '{{ data.code }}', 'qty')">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id='stock-guide' {% if data.position == 0 %} class="disp-none" {% endif %}>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="target" class="form-label">目标价格</label>
+                        <input id="target" type="text" value="{{ data.target|floatformat:data.deci }}" placeholder="目标价格"
+                               class="form-control" onchange="calc_deal_data('{{ data.cat }}', '{{ data.code }}', 'target')">
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="stop" class="form-label">止损价格</label>
+                        <input id="stop" type="text" value="{{ data.stop|floatformat:data.deci }}" placeholder="止损价格"
+                               class="form-control" onchange="calc_deal_data('{{ data.cat }}', '{{ data.code }}', 'stop')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="chance" class="form-label">成功几率</label>
+                        <input id="chance" type="text" value="{{ data.chance }}" placeholder="交易成功几率"
+                               class="form-control" readonly>
+                      </div>
+                    </div>
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="risk" class="form-label">风险资金</label>
+                        <input id="risk" type="text" value="{{ data.risk|floatformat:2 }}" placeholder="可能损失金额"
+                               class="form-control" readonly>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="col-sm-12">
+              <div class="row">
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="fee" class="form-label">成交费用</label>
+                    <input id="fee" type="text" value="{{ data.fee|floatformat:2 }}" placeholder="本次成交费用"
+                           class="form-control" onchange="calc_deal_data('{{ data.cat }}', '{{ data.code }}', 'fee')">
+                  </div>
+                </div>
+                <div class="col-md-6 col-sm-6">
+                  <div class="mb-2">
+                    <label for="amount" class="form-label">成交金额</label>
+                    <input id="amount" type="text" value="{{ data.amount|floatformat:2 }}" placeholder="本次成交金额"
+                           class="form-control" readonly>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+        </form>
+
+        <div class="hr-text">
+            <span id="comment-split" class="color-lightgrey">备忘</span>
+        </div>
+
+        <div id="comments-area" class="row">
+          <label for="comments" class="form-label disp-none">备忘</label>
+
+          <textarea id="comments">
+              {% if data.comments != '' and data.comments != null %}
+                  {{ data.comments }}
+              {% endif %}
+          </textarea>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="divider-thin-gray"></div>
+            <div class="page-submit d-flex">
+              <a href="javascript:deal_cancel()" class="btn btn-link">取消</a>
+              <a href="javascript:deal_submit('{{ data.market }}.{{ data.code }}')" class="btn btn-primary ms-auto">提交</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="page-foot"></div>
+
+    {% endif %}
+
+    <script>
+        page_chart_init("{{ market }}.{{ code }}", "{{ view }}");
+        set_page_scroll();
+
+        $(function () {
+            init_tinymce();
+
+            // 全屏时，临时存储表单数据，返回时自动填充
+            {% if screen == 'norm' %}
+                refill_temp_form_data();
+            {% endif %}
+        })
+    </script>
+
+{% endblock %}

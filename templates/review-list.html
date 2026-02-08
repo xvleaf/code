@@ -1,0 +1,139 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>{% if review_type == 'focus' %}关注{% else %}交易{% endif %} - 复盘</title>
+{% endblock %}
+
+{% block content %}
+    <div class="page-content">
+      <div class="card card-body">
+        <table id="table-list" class="table">
+        <thead>
+          <tr class="sticky-top table-title-background">
+            <th class="table-title-text">代码</th>
+            <th class="table-title-text">名称</th>
+            <th class="table-title-text">价格</th>
+            <th class="table-title-text">
+                {% if review_type == 'focus' %}
+                    <span>计划</span>
+                {% else %}
+                    <span>成本</span>
+                {% endif %}
+            </th>
+            <th class="table-title-text">
+                {% if review_type == 'focus' %}
+                    <span>目标</span>
+                {% else %}
+                    <span>成交</span>
+                {% endif %}
+            </th>
+            <th class="table-title-text">
+                <span id="title-code" class="pointer" onclick="review_list_order('{{ order_type }}')">
+                  评级
+                </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody class="table-tbody">
+          <tr>
+              <td colspan="6" class="table-divider-market"></td>
+          </tr>
+
+          {% for list in lists %}
+            <tr>
+              <td class="table-cell-text">
+                  <a id="code-{{ list.flow }}" href="/review/{% if review_type == 'focus' %}focus{% else %}trans{% endif %}/view/{{ list.market }}.{{ list.code }}?flow={{ list.flow }}">{{ list.code }}</a>
+              </td>
+              <td class="table-cell-text">
+                  <label id="name-{{ list.flow }}">{{ list.name }}</label>
+              </td>
+              <td class="table-cell-text">
+                  <label id="close-{{ list.flow }}"></label>
+              </td>
+              <td class="table-cell-text">
+                {% if review_type == 'focus' %}
+                  <label id="price-{{ list.flow }}">{{ list.price }}</label>
+                {% else %}
+                  <label id="cost-{{ list.flow }}">{{ list.cost }}</label>
+                {% endif %}
+              </td>
+              <td class="table-cell-text">
+                {% if review_type == 'focus' %}
+                  <label id="target-{{ list.flow }}">{{ list.target }}</label>
+                {% else %}
+                  <label id="price-{{ list.flow }}">{{ list.price }}</label>
+                {% endif %}
+              </td>
+              <td class="table-cell-text">
+                  <label id="star-{{ list.flow }}">{{ list.star }}</label>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+        </table>
+
+        <div class="width-100 disp-h-center">
+          <label for="review-type" class="form-label"></label>
+          <div style="position:absolute; left: 2px;">
+            <select id="review-type" class="form-select-mini pointer" onchange="review_type_select()">
+              <option value="focus" {% if review_type == 'focus' %} selected {% endif %}>关注</option>
+              <option value="trans" {% if review_type == 'trans' %} selected {% endif %}>交易</option>
+            </select>
+          </div>
+
+          <span class="
+            {% if page_number > 1 %}
+                pointer color-dimgrey" onclick="list_page_action('click', 'prev', '{{ page_number }}', '{{ order_type }}')">
+            {% else %}
+                color-lightgrey">
+            {% endif %}
+
+            <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                 stroke-linecap="round" stroke-linejoin="round">
+               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+               <path d="M15 6l-6 6l6 6"></path>
+            </svg>
+          </span>
+
+          <div class="disp-h-center disp-v-center width-100px">
+            <div id="page-number" contenteditable="true" class="general-textbox">{{ page_number }}</div>
+            <span>/</span>
+            <span>{{ page_total }}</span>
+          </div>
+
+          <span class="
+            {% if page_number < page_total %}
+                pointer color-dimgrey" onclick="list_page_action('click', 'next', '{{ page_number }}', '{{ order_type }}')">
+            {% else %}
+                color-lightgrey">
+            {% endif %}
+
+            <svg width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none"
+                 stroke-linecap="round" stroke-linejoin="round">
+               <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+               <path d="M9 6l6 6l-6 6"></path>
+            </svg>
+          </span>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="page-foot"></div>
+
+    <script>
+        document.getElementById("table-list").style.opacity = '0';
+        review_list_update('{{ review_type }}');
+        document.getElementById("table-list").style.opacity = '100';
+
+        setInterval(
+            function() {review_list_update('{{ review_type }}');},
+            {{ interval }}
+        );
+
+        document.getElementById("page-number").addEventListener("click", function() {
+            const pageNumberDiv = document.getElementById("page-number");
+            list_page_listen (pageNumberDiv, {{ page_total }}, '{{ order_type }}')
+        });
+    </script>
+{% endblock %}

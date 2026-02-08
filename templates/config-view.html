@@ -1,0 +1,956 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>设置</title>
+{% endblock %}
+
+{% block content %}
+  <div id="page-content" class="page-content bg-white">
+    <div id="config" class="accordion" role="tablist" aria-multiselectable="true">
+      <div class="accordion-item">
+        <div class="accordion-header" role="tab">
+          <button data-bs-target="#config-icp" class="accordion-button collapsed" data-bs-toggle="collapse"
+                  aria-expanded="false">备案信息</button>
+        </div>
+
+        <div id="config-icp" class="accordion-collapse collapse" role="tabpanel" data-bs-parent="#config">
+          <div class="accordion-body pt-0">
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="icp-name" class="form-label color-lightblue">备案名称</label>
+                        <input id="icp-name" type="text" value="{{ data.icp.name }}" placeholder="备案名称" class="form-control"
+                               onchange="setting_config_changed('icp', 'name')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="icp-url" class="form-label color-lightblue">备案网站</label>
+                        <input id="icp-url" type="text" value="{{ data.icp.url }}" placeholder="备案网站" class="form-control"
+                               onchange="setting_config_changed('icp', 'url')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header" role="tab">
+          <button data-bs-target="#config-layout" class="accordion-button collapsed" data-bs-toggle="collapse"
+                  aria-expanded="false">页面布局</button>
+        </div>
+
+        <div id="config-layout" class="accordion-collapse collapse" role="tabpanel" data-bs-parent="#config">
+          <div class="accordion-body pt-0">
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="viewport-fit" class="form-label color-lightblue">页面区域</label>
+                        <select id="viewport-fit" class="form-select" onchange="setting_config_changed('viewport', 'fit')">
+                          <option value="contain" {% if data.viewport.fit == 'contain' %} selected {% endif %}>窗口包含网页</option>
+                          <option value="cover" {% if data.viewport.fit == 'cover' %} selected {% endif %}>网页覆盖窗口</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">页面宽度</label>
+
+                      <div class="disp-flex">
+                        <label for="frame-screen" class="form-label"></label>
+                        <select id="frame-screen" class="filter-select" onchange="get_setting_config('frame', 'screen')">
+                          <option value="norm" {% if frame.screen == 'norm' %}selected{% endif %}>非全屏</option>
+                          <option value="full">全屏</option>
+                        </select>
+
+                        <label for="frame-device" class="form-label"></label>
+                        <select id="frame-device" class="filter-select " onchange="get_setting_config('frame', 'device')">
+                          <option value="mb" selected>手机</option>
+                          <option value="pc">电脑</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="frame-scale" class="form-label font-italic">默认比例</label>
+                        <input id="frame-scale" type="text" value="{{ data.frame.scale }}" placeholder="默认比例" class="form-control"
+                               onchange="setting_config_changed('frame', 'scale')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="frame-min" class="form-label font-italic">最小宽度</label>
+                        <input id="frame-min" type="text" value="{{ data.frame.min }}" placeholder="最小宽度" class="form-control"
+                               onchange="setting_config_changed('frame', 'min')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="frame-max" class="form-label font-italic">最大宽度</label>
+                        <input id="frame-max" type="text" value="{{ data.frame.max }}" placeholder="最大宽度" class="form-control"
+                               onchange="setting_config_changed('frame', 'max')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">曲线高度</label>
+
+                      <div class="disp-flex">
+                        <label for="chart-screen" class="form-label"></label>
+                        <select id="chart-screen" class="filter-select" onchange="get_setting_config('chart', 'screen')">
+                          <option value="norm" selected>非全屏</option>
+                          <option value="full">全屏</option>
+                        </select>
+
+                        <label for="chart-device" class="form-label"></label>
+                        <select id="chart-device" class="filter-select " onchange="get_setting_config('chart', 'device')">
+                          <option value="mb" selected>手机</option>
+                          <option value="pc">电脑</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="chart-scale" class="form-label font-italic">默认比例</label>
+                        <input id="chart-scale" type="text" value="{{ data.chart.scale }}" placeholder="默认比例" class="form-control"
+                               onchange="setting_config_changed('chart', 'scale')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="chart-min" class="form-label font-italic">最小高度</label>
+                        <input id="chart-min" type="text" value="{{ data.chart.min }}" placeholder="最小高度" class="form-control"
+                               onchange="setting_config_changed('chart', 'min')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="chart-max" class="form-label font-italic">最大高度</label>
+                        <input id="chart-max" type="text" value="{{ data.chart.max }}" placeholder="最大高度" class="form-control"
+                               onchange="setting_config_changed('chart', 'max')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">分时宽度</label>
+
+                      <div class="disp-flex">
+                        <label for="quote-device" class="form-label"></label>
+                        <select id="quote-device" class="filter-select " onchange="get_setting_config('quote', 'device')">
+                          <option value="mb" selected>手机</option>
+                          <option value="pc">电脑</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="quote-min" class="form-label font-italic">最小比例</label>
+                        <input id="quote-min" type="text" value="{{ data.quote.min }}" placeholder="报价栏最小宽度比例" class="form-control"
+                               onchange="setting_config_changed('quote', 'min')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="quote-max" class="form-label font-italic">最大比例</label>
+                        <input id="quote-max" type="text" value="{{ data.quote.max }}" placeholder="报价栏最大宽度比例" class="form-control"
+                               onchange="setting_config_changed('quote', 'max')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header" role="tab">
+          <button data-bs-target="#config-view" class="accordion-button collapsed" data-bs-toggle="collapse"
+                  aria-expanded="false">默认视图</button>
+        </div>
+
+        <div id="config-view" class="accordion-collapse collapse" role="tabpanel" data-bs-parent="#config">
+          <div class="accordion-body pt-0">
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="view-focus" class="form-label color-lightblue">关注视图</label>
+                        <select id="view-focus" class="form-select" onchange="setting_config_changed('view', 'focus')">
+                          <option value="trend" {% if data.view.focus == 'trend' %} selected {% endif %}>分时图</option>
+                          <option value="kline" {% if data.view.focus == 'kline' %} selected {% endif %}>K线图</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="view-fund" class="form-label color-lightblue">基金视图</label>
+                        <select id="view-fund" class="form-select" onchange="setting_config_changed('view', 'fund')">
+                          <option value="trend" {% if data.view.fund == 'trend' %} selected {% endif %}>分时图</option>
+                          <option value="kline" {% if data.view.fund == 'kline' %} selected {% endif %}>K线图</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="view-sector" class="form-label color-lightblue">板块视图</label>
+                        <select id="view-sector" class="form-select" onchange="setting_config_changed('view', 'sector')">
+                          <option value="trend" {% if data.view.sector == 'trend' %} selected {% endif %}>分时图</option>
+                          <option value="kline" {% if data.view.sector == 'kline' %} selected {% endif %}>K线图</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="view-filter" class="form-label color-lightblue">筛选视图</label>
+                        <select id="view-filter" class="form-select" onchange="setting_config_changed('view', 'filter')">
+                          <option value="trend" {% if data.view.filter == 'trend' %} selected {% endif %}>分时图</option>
+                          <option value="kline" {% if data.view.filter == 'kline' %} selected {% endif %}>K线图</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="view-trans" class="form-label color-lightblue">交易视图</label>
+                        <select id="view-trans" class="form-select" onchange="setting_config_changed('view', 'trans')">
+                          <option value="trend" {% if data.view.trans == 'trend' %} selected {% endif %}>分时图</option>
+                          <option value="kline" {% if data.view.trans == 'kline' %} selected {% endif %}>K线图</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="view-review" class="form-label color-lightblue">复盘视图</label>
+                        <select id="view-review" class="form-select" onchange="setting_config_changed('view', 'review')">
+                          <option value="trend" {% if data.view.review == 'trend' %} selected {% endif %}>分时图</option>
+                          <option value="kline" {% if data.view.review == 'kline' %} selected {% endif %}>K线图</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="view-query" class="form-label color-lightblue">其它视图</label>
+                        <select id="view-query" class="form-select" onchange="setting_config_changed('view', 'query')">
+                          <option value="trend" {% if data.view.query == 'trend' %} selected {% endif %}>分时图</option>
+                          <option value="kline" {% if data.view.query == 'kline' %} selected {% endif %}>K线图</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header" role="tab">
+          <button data-bs-target="#config-display" class="accordion-button collapsed" data-bs-toggle="collapse"
+                  aria-expanded="false">列表行数</button>
+        </div>
+
+        <div id="config-display" class="accordion-collapse collapse" role="tabpanel" data-bs-parent="#config">
+          <div class="accordion-body pt-0">
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="page-fund" class="form- color-lightblue">基金列表</label>
+                        <input id="page-fund" type="text" value="{{ data.page.fund }}" placeholder="每页基金列表条数" class="form-control"
+                               onchange="setting_config_changed('page', 'fund')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="page-sector" class="form-label color-lightblue">板块列表</label>
+                        <input id="page-sector" type="text" value="{{ data.page.sector }}" placeholder="每页板块列表条数" class="form-control"
+                               onchange="setting_config_changed('page', 'sector')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="page-filter" class="form-label color-lightblue">筛选列表</label>
+                        <input id="page-filter" type="text" value="{{ data.page.filter }}" placeholder="每页筛选列表条数" class="form-control"
+                               onchange="setting_config_changed('page', 'filter')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="page-review" class="form-label color-lightblue">复盘列表</label>
+                        <input id="page-review" type="text" value="{{ data.page.review }}" placeholder="每页复盘列表条数" class="form-control"
+                               onchange="setting_config_changed('page', 'review')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header" role="tab">
+          <button data-bs-target="#config-kline" class="accordion-button collapsed" data-bs-toggle="collapse"
+                  aria-expanded="false">K线参数</button>
+        </div>
+
+        <div id="config-kline" class="accordion-collapse collapse" role="tabpanel" data-bs-parent="#config">
+          <div class="accordion-body pt-0">
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">蜡烛密度</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="density-std" class="form-label font-italic">标准密度</label>
+                        <input id="density-std" type="text" value="{{ data.kline.density.std }}" placeholder="蜡烛标准密度" class="form-control"
+                               onchange="setting_config_changed('kline', 'density-std')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="density-min" class="form-label font-italic">最小密度</label>
+                        <input id="density-min" type="text" value="{{ data.kline.density.min }}" placeholder="蜡烛最小密度" class="form-control"
+                               onchange="setting_config_changed('kline', 'density-min')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="density-max" class="form-label font-italic">最大密度</label>
+                        <input id="density-max" type="text" value="{{ data.kline.density.max }}" placeholder="蜡烛最大密度" class="form-control"
+                               onchange="setting_config_changed('kline', 'density-max')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">起始日期</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="start-day" class="form-label font-italic">日线</label>
+                        <input id="start-day" type="text" value="{{ data.kline.start.day }}" placeholder="日线起始日期" class="form-control"
+                               onchange="setting_config_changed('kline', 'start-day')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="start-week" class="form-label font-italic">周线</label>
+                        <input id="start-week" type="text" value="{{ data.kline.start.week }}" placeholder="周线起始日期" class="form-control"
+                               onchange="setting_config_changed('kline', 'start-week')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="start-month" class="form-label font-italic">月线</label>
+                        <input id="start-month" type="text" value="{{ data.kline.start.month }}" placeholder="月线起始日期" class="form-control"
+                               onchange="setting_config_changed('kline', 'start-month')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">结束日期</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="end-day" class="form-label font-italic">日线</label>
+                        <input id="end-day" type="text" value="{{ data.kline.end.day }}" placeholder="日线结束日期" class="form-control"
+                               onchange="setting_config_changed('kline', 'end-day')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="end-week" class="form-label font-italic">周线</label>
+                        <input id="end-week" type="text" value="{{ data.kline.end.week }}" placeholder="周线结束日期" class="form-control"
+                               onchange="setting_config_changed('kline', 'end-week')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="end-month" class="form-label font-italic">月线</label>
+                        <input id="end-month" type="text" value="{{ data.kline.end.month }}" placeholder="月线结束日期" class="form-control"
+                               onchange="setting_config_changed('kline', 'end-month')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="kline-right" class="form-label color-lightblue">默认类型</label>
+                        <select id="kline-right" class="form-select" onchange="setting_config_changed('kline', 'right')">
+                          <option value="adj" {% if data.kline.right == 'adj' %} selected {% endif %}>复权</option>
+                          <option value="div" {% if data.kline.right == 'div' %} selected {% endif %}>除权</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="kline-period" class="form-label color-lightblue">默认周期</label>
+                        <select id="kline-period" class="form-select" onchange="setting_config_changed('kline', 'period')">
+                          <option value="day" {% if data.kline.period == 'day' %} selected {% endif %}>日线</option>
+                          <option value="week" {% if data.kline.period == 'week' %} selected {% endif %}>周线</option>
+                          <option value="month" {% if data.kline.period == 'month' %} selected {% endif %}>月线</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">EMA参数</label>
+
+                      <div class="disp-flex">
+                        <label for="ema-period" class="form-label"></label>
+                        <select id="ema-period" class="filter-select " onchange="get_setting_config('kline', 'ema-period')">
+                          <option value="day" selected>日线</option>
+                          <option value="week">周线</option>
+                          <option value="month">月线</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="ema-k" class="form-label font-italic">默认k值</label>
+                        <input id="ema-k" type="text" value="{{ data.kline.ema.k }}" placeholder="默认k值" class="form-control"
+                               onchange="setting_config_changed('kline', 'ema-k')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="ema-d" class="form-label font-italic">默认d值</label>
+                        <input id="ema-d" type="text" value="{{ data.kline.ema.d }}" placeholder="默认d值" class="form-control"
+                               onchange="setting_config_changed('kline', 'ema-d')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">MA参数</label>
+
+                      <div class="disp-flex">
+                        <label for="ma-period" class="form-label"></label>
+                        <select id="ma-period" class="filter-select " onchange="get_setting_config('kline', 'ma-period')">
+                          <option value="day" selected>日线</option>
+                          <option value="week">周线</option>
+                          <option value="month">月线</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="ma-a" class="form-label font-italic">股价周期</label>
+                        <input id="ma-a" type="text" value="{{ data.kline.ma.a }}" placeholder="默认股价周期" class="form-control"
+                               onchange="setting_config_changed('kline', 'ma-a')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="ma-v" class="form-label font-italic">成交量周期</label>
+                        <input id="ma-v" type="text" value="{{ data.kline.ma.v }}" placeholder="默认成交量周期" class="form-control"
+                               onchange="setting_config_changed('kline', 'ma-v')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header" role="tab">
+          <button data-bs-target="#config-cycle" class="accordion-button collapsed" data-bs-toggle="collapse"
+                  aria-expanded="false">时间参数</button>
+        </div>
+
+        <div id="config-cycle" class="accordion-collapse collapse" role="tabpanel" data-bs-parent="#config">
+          <div class="accordion-body pt-0">
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">交易时间</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="time-auction" class="form-label font-italic">竞价时间</label>
+                        <input id="time-auction" type="text" value="{{ data.time.auction }}" placeholder="集合竞价时间" class="form-control"
+                               onchange="setting_config_changed('time', 'auction')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="time-open" class="form-label font-italic">早盘时间</label>
+                        <input id="time-open" type="text" value="{{ data.time.open }}" placeholder="早晨开盘时间" class="form-control"
+                               onchange="setting_config_changed('time', 'open')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="time-break" class="form-label font-italic">午休时间</label>
+                        <input id="time-break" type="text" value="{{ data.time.break }}" placeholder="集合竞价时间" class="form-control"
+                               onchange="setting_config_changed('time', 'break')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="time-resume" class="form-label font-italic">午盘时间</label>
+                        <input id="time-resume" type="text" value="{{ data.time.resume }}" placeholder="下午开盘时间" class="form-control"
+                               onchange="setting_config_changed('time', 'resume')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="time-close" class="form-label font-italic">休市时间</label>
+                        <input id="time-close" type="text" value="{{ data.time.close }}" placeholder="下午休市时间" class="form-control"
+                               onchange="setting_config_changed('time', 'close')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">缓存周期</label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="cache-day" class="form-label font-italic">一日</label>
+                        <input id="cache-day" type="text" value="{{ data.cache.day }}" placeholder="一天缓存周期(秒)" class="form-control"
+                               onchange="setting_config_changed('cache', 'day')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="cache-long" class="form-label font-italic">长期</label>
+                        <input id="cache-long" type="text" value="{{ data.cache.long }}" placeholder="长期缓存周期(秒)" class="form-control"
+                               onchange="setting_config_changed('cache', 'long')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="cache-short" class="form-label font-italic">短时</label>
+                        <input id="cache-short" type="text" value="{{ data.cache.short }}" placeholder="短时缓存周期(秒)" class="form-control"
+                               onchange="setting_config_changed('cache', 'short')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="refresh-interval" class="form-label color-lightblue">刷新周期</label>
+                        <input id="refresh-interval" type="text" value="{{ data.refresh.interval }}" placeholder="报价刷新周期(毫秒)" class="form-control"
+                               onchange="setting_config_changed('refresh', 'interval')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="stats-range" class="form-label color-lightblue">统计周期</label>
+                        <input id="stats-range" type="text" value="{{ data.stats.range }}" placeholder="资金及复盘统计周期(天)" class="form-control"
+                               onchange="setting_config_changed('stats', 'range')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header" role="tab">
+          <button data-bs-target="#config-fee" class="accordion-button collapsed" data-bs-toggle="collapse"
+                  aria-expanded="false">交易费率</button>
+        </div>
+
+        <div id="config-fee" class="accordion-collapse collapse" role="tabpanel" data-bs-parent="#config">
+          <div class="accordion-body pt-0">
+            <div>
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex">
+                      <label class="form-label pad-btm-1 color-lightblue">交易费率</label>
+
+                      <div class="disp-flex">
+                        <label for="fee-market" class="form-label"></label>
+                        <select id="fee-market" class="filter-select" onchange="get_setting_config('fee', 'market')">
+                          <option value="SH" selected>上海</option>
+                          <option value="SZ">深圳</option>
+                          <option value="BJ">北京</option>
+                        </select>
+
+                        <label for="fee-type" class="form-label"></label>
+                        <select id="fee-type" class="filter-select" onchange="get_setting_config('fee', 'type')">
+                          <option value="S" selected>股票</option>
+                          <option value="F">基金</option>
+                          <option value="B">债券</option>
+                        </select>
+
+                        <label for="fee-intent" class="form-label"></label>
+                        <select id="fee-intent" class="filter-select " onchange="get_setting_config('fee', 'intent')">
+                          <option value="L" selected>买入</option>
+                          <option value="S">卖出</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="fee-stamp" class="form-label font-italic">印花税</label>
+                        <input id="fee-stamp" type="text" value="{{ data.fee.stamp }}" placeholder="印花税(%)" class="form-control"
+                               onchange="setting_config_changed('fee', 'stamp')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="fee-trans" class="form-label font-italic">过户费</label>
+                        <input id="fee-trans" type="text" value="{{ data.fee.trans }}" placeholder="过户费(%)" class="form-control"
+                               onchange="setting_config_changed('fee', 'trans')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="commi-rate" class="form-label font-italic">佣金比列</label>
+                        <input id="commi-rate" type="text" value="{{ data.fee.commi.rate }}" placeholder="佣金比例(‰)" class="form-control"
+                               onchange="setting_config_changed('fee', 'commi-rate')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="col-md-6 col-sm-6">
+                      <div class="mb-2">
+                        <label for="commi-min" class="form-label font-italic">最低佣金</label>
+                        <input id="commi-min" type="text" value="{{ data.fee.commi.min }}" placeholder="最低佣金(元)" class="form-control"
+                               onchange="setting_config_changed('fee', 'commi-min')">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-foot"></div>
+
+{% endblock %}

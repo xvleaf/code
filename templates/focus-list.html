@@ -1,0 +1,214 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>关注</title>
+{% endblock %}
+
+{% block content %}
+
+    <div class="page-content">
+      <div class="card card-body">
+        <table id="table-list" class="table">
+        <thead>
+          <tr class="sticky-top table-title-background">
+            <th class="table-title-text">代码</th>
+            <th class="table-title-text">名称</th>
+            <th class="table-title-text">价格</th>
+            <th class="table-title-text">计划</th>
+            <th class="table-title-text">胜率</th>
+            <th class="table-title-text">涨幅</th>
+            <th class="disp-none">DECI</th>
+          </tr>
+        </thead>
+        <tbody class="table-tbody">
+          {% if markets %}
+              <tr>
+                  <td colspan="6" class="table-divider-market"></td>
+              </tr>
+
+              {% for list in markets %}
+                <tr>
+                  <td class="table-cell-text">
+                      <a id="code-{{ list.code }}" href="/focus/view/{{ list.market }}.{{ list.code }}">{{ list.code }}</a>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="name-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="close-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="price-{{ list.code }}">{{ list.price|floatformat:0 }}</label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="chance-{{ list.code }}">{{ list.chance }}</label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="change-{{ list.code }}"></label>
+                  </td>
+                  <td class="disp-none">
+                      <label id="deci-{{ list.code }}">1</label>
+                  </td>
+                </tr>
+              {% endfor %}
+          {% endif %}
+
+          {% if ready %}
+              <tr>
+                  <td colspan="6" class="table-divider-ready"></td>
+              </tr>
+
+              {% for list in ready %}
+                <tr>
+                  <td class="table-cell-text">
+                      <a id="code-{{ list.code }}" href="/focus/view/{{ list.market }}.{{ list.code }}">{{ list.code }}</a>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="name-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="close-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="price-{{ list.code }}">{{ list.price|floatformat:list.deci }}</label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="chance-{{ list.code }}">{{ list.chance }}</label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="change-{{ list.code }}"></label>
+                  </td>
+                  <td class="disp-none">
+                      <label id="deci-{{ list.code }}">{{ list.deci }}</label>
+                  </td>
+                </tr>
+              {% endfor %}
+          {% endif %}
+
+          {% if expensive %}
+              <tr>
+                  <td colspan="6" class="table-divider-expensive"></td>
+              </tr>
+
+              {% for list in expensive %}
+                <tr>
+                  <td class="table-cell-text">
+                      <a id="code-{{ list.code }}" href="/focus/view/{{ list.market }}.{{ list.code }}">{{ list.code }}</a>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="name-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="close-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="price-{{ list.code }}">{{ list.price|floatformat:list.deci }}</label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="chance-{{ list.code }}">{{ list.chance }}</label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="change-{{ list.code }}"></label>
+                  </td>
+                  <td class="disp-none">
+                      <label id="deci-{{ list.code }}">{{ list.deci }}</label>
+                  </td>
+                </tr>
+              {% endfor %}
+          {% endif %}
+
+          {% if cheap %}
+              <tr>
+                  <td colspan="6" class="table-divider-cheap"></td>
+              </tr>
+
+              {% for list in cheap %}
+                <tr>
+                  <td class="table-cell-text">
+                      <a id="code-{{ list.code }}" href="/focus/view/{{ list.market }}.{{ list.code }}">{{ list.code }}</a>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="name-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="close-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="price-{{ list.code }}">{{ list.price|floatformat:list.deci }}</label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="chance-{{ list.code }}">{{ list.chance }}</label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="change-{{ list.code }}"></label>
+                  </td>
+                  <td class="disp-none">
+                      <label id="deci-{{ list.code }}">{{ list.deci }}</label>
+                  </td>
+                </tr>
+              {% endfor %}
+          {% endif %}
+
+          {% if hold %}
+              <tr>
+                  <td colspan="6" class="table-divider-pending"></td>
+              </tr>
+
+              {% for list in hold %}
+                <tr>
+                  <td class="table-cell-text">
+                      <a id="code-{{ list.code }}" href="/focus/view/{{ list.market }}.{{ list.code }}">{{ list.code }}</a>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="name-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="close-{{ list.code }}"></label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="price-{{ list.code }}">
+                          {% if list.price %}
+                            {{ list.price|floatformat:list.deci }}
+                          {% else %}
+                            -
+                          {% endif %}
+                      </label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="chance-{{ list.code }}">
+                          {% if list.chance %}
+                            {{ list.chance }}
+                          {% else %}
+                            -
+                          {% endif %}
+                      </label>
+                  </td>
+                  <td class="table-cell-text">
+                      <label id="change-{{ list.code }}"></label>
+                  </td>
+                  <td class="disp-none">
+                      <label id="deci-{{ list.code }}">{{ list.deci }}</label>
+                  </td>
+                </tr>
+              {% endfor %}
+          {% endif %}
+
+        </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="page-foot"></div>
+
+    <script>
+        document.getElementById("table-list").style.opacity = '0';
+        update_stock_list();
+        document.getElementById("table-list").style.opacity = '100';
+
+        setInterval(
+            function() {update_stock_list();},
+            {{ interval }}
+        );
+    </script>
+
+{% endblock %}

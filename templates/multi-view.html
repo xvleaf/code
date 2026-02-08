@@ -1,0 +1,139 @@
+{% extends "base-view.html" %}
+<!-- fund/view, sector/view, filter/view, link/view/ 共用-->
+{% block title %}
+    <title>{{ data.name }} - {{ data.code }}</title>
+{% endblock %}
+
+{% block refer %}
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'base/lib/tinymce/skins/ui/oxide/skin.min.css' %}" id="mce-u0">
+
+  <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
+  <script src="{% static 'base/lib/tinymce/tinymce.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+
+    <div id="page-chart" class="page-chart"></div>
+
+    {% if navi %}
+        <div>
+          <div class="view-action line-height-3 disp-h-center">
+            {% if not link %}
+                {% if focus >= 0 %}
+                  <div class="navi-height" onclick="mark_focus_action('{{ market }}.{{ code }}', '0')">
+                    <span id="focus" class="margin-right-2 pointer"></span>
+                  </div>
+                {% endif %}
+
+                <div class="navi-height" onclick="mark_focus_action('{{ market }}.{{ code }}', '1')">
+                  <span id="mark-1st" class="margin-left-2 margin-right-2 pointer"></span>
+                </div>
+
+                <div class="navi-height" onclick="mark_focus_action('{{ market }}.{{ code }}', '2')">
+                  <span id="mark-2nd" class="margin-left-2 margin-right-2 pointer"></span>
+                </div>
+
+                {% if site != 'sector/view' %}
+                  <div class="navi-height" onclick="mark_focus_action('{{ market }}.{{ code }}', '-1')">
+                    <span id="hide" class="margin-left-2 margin-right-2 pointer"></span>
+                  </div>
+                {% endif %}
+
+                {% if screen != 'full'%}
+                  <div class="navi-height" onclick="show_comment()">
+                    <span id="show-comment" class="margin-left-2 margin-right-2 pointer"></span>
+                  </div>
+                {% endif %}
+            {% endif %}
+            <div class="navi-height" onclick="view_goback_list('{{ market }}.{{ code }}')">
+              <span id="goback" class="{% if not link %}margin-left-2{% endif %} pointer"></span>
+            </div>
+          </div>
+        </div>
+    {% endif %}
+
+    {% if screen != 'full' and not link %}
+      <div id="comments-area"  class="page-content bg-white disp-none">
+        <div class="row">
+            <form id="comments-form" onsubmit="save_comment('{{ market }}.{{ data.code }}', '');">
+              <label for="comments" class="form-label disp-none">备忘</label>
+
+              <textarea id="comments">
+                  {% if data.comments != '' and data.comments != null %}
+                      {{ data.comments }}
+                  {% endif %}
+              </textarea>
+            </form>
+        </div>
+
+      </div>
+
+      <div class="page-foot"></div>
+    {% endif %}
+
+    <script>
+        page_chart_init("{{ market }}.{{ code }}", "{{ view }}");
+        set_page_scroll();
+
+        const goback_element = $("#goback");
+        goback_element.html(icon_goback);
+
+        {% if not link %}
+            const show_comment_element = $("#show-comment");
+            show_comment_element.html(icon_show_comment);
+
+            mark_focus_set(['{{ focus }}' === '1' ? '1' : '-1', '{{ data.mark }}']);
+
+            $(function () {
+                init_tinymce();
+
+                // 全屏时，临时存储表单数据，返回时自动填充
+                {% if screen == 'norm' %}
+                    refill_temp_form_data();
+                {% endif %}
+            })
+        {% endif %}
+
+        {% if navi %} {% if not link %}
+            // 监听键盘事件
+            document.addEventListener('DOMContentLoaded', function() {
+                document.addEventListener('keydown', function(event) {
+                    // 当焦点在备忘输入框时抑制键盘监听
+                    if (document.activeElement.tagName === 'comments') {
+                        return;
+                    }
+
+                    switch(event.key) {
+                        case '=':
+                            {% if focus >= 0 %}
+                                if (document.getElementById('focus')) {
+                                    mark_focus_action('{{ market }}.{{ code }}', '0');
+                                }
+                            {% endif %}
+                            break;
+                        case '1':
+                            if (document.getElementById('mark-1st')) {
+                                mark_focus_action('{{ market }}.{{ code }}', '1');
+                            }
+                            break;
+                        case '2':
+                            if (document.getElementById('mark-2nd')) {
+                                mark_focus_action('{{ market }}.{{ code }}', '2');
+                            }
+                            break;
+                        case '-':
+                            if (document.getElementById('hide')) {
+                                {% if site != 'sector/view' %}
+                                  mark_focus_action('{{ market }}.{{ code }}', '-1')
+                                {% endif %}
+                            }
+                            break;
+                    }
+                });
+            });
+        {% endif %}{% endif %}
+
+    </script>
+
+{% endblock %}

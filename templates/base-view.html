@@ -1,0 +1,218 @@
+<!doctype html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0, viewport-fit={{ viewport }}"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+
+    {% block title %}
+      <title></title>
+    {% endblock %}
+
+    {% load static %}
+    <link rel="icon" type="image/x-icon" href="{% static 'base/icon/favicon.svg' %}"/>
+    <link rel="Bookmark" type="image/x-icon"  href="{% static 'base/icon/favicon.svg' %}"/>
+    <link rel="apple-touch-icon" sizes="240x240" href="{% static 'base/icon/favicon.png' %}">
+
+    <link rel="stylesheet" href="{% static 'base/css/tabler.min.css' %}"/>
+    <link rel="stylesheet" href="{% static 'stock/css/view.css' %}"/>
+
+    <script src="{% static 'base/js/jquery-3.7.0.min.js' %}"></script>
+    <script src="{% static 'base/js/tabler.min.js' %}"></script>
+    <script src="{% static 'base/js/base.js' %}"></script>
+    <script src="{% static 'base/lib/layer/layer.js' %}"></script>
+
+    <script src="{% static 'stock/js/icon.js' %}"></script>
+    <script src="{% static 'stock/js/func.js' %}"></script>
+    <script src="{% static 'stock/js/chart.js' %}"></script>
+
+    {% block refer %}
+    {% endblock %}
+
+  </head>
+  <body>
+
+    {% csrf_token %}
+
+    <script>
+        // 即使同时打开两个页面，site 值也不会覆盖，也即是说 site 仅作用于所在页面
+        let site = "{{ site }}";
+        let csrf_token = '{{ csrf_token }}';
+        let body_width = window.innerWidth;
+        let body_height = window.innerHeight;
+
+        if (!localStorage.getItem("size")) {
+            get_size_config("{{ screen }}");
+            set_frame_size();
+            set_local_storage();
+        } else {
+            get_local_storage();
+            set_frame_size();
+        }
+
+        {% if chart %}
+            set_chart_height();
+            set_chart_inside("{{ navi }}");
+            set_trend_width();
+        {% endif %}
+
+        set_content_top("{{ screen }}", "{{ chart }}");
+    </script>
+
+    {% block script %}{% endblock %}
+
+    <div class="base-root">
+      {% if screen != 'full' %}
+          <div id="base-header" class="base-header">
+              <div class="hideit">
+                <header class="navbar navbar-expand-sm navbar-light">
+                  <div class="base-navi">
+                    <div class="disp-flex">
+                        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu"
+                                aria-controls="navbar-menu" aria-expanded="false" aria-label="Toggle navigation">
+                          <span class="navbar-toggler-icon"></span>
+                        </button>
+                        <img class="pad-right-1" width="30px" height="30px"
+                             src="{% static 'base/icon/favicon.svg' %}" alt="WELL"/>
+                    </div>
+                  </div>
+                </header>
+              </div>
+
+              <header class="navbar-expand-sm">
+                <div class="collapse navbar-collapse" id="navbar-menu">
+                  <div class="navbar navbar-light">
+                    <div class="base-navi">
+                      <ul class="navbar-nav">
+
+                        {% if 'overall' in site %}
+                          <li class="nav-item active dropdown">
+                        {% else %}
+                          <li class="nav-item dropdown">
+                        {% endif %}
+                          <a class="nav-link" href="/overall">
+                            <span id="icon-overall" class="nav-link-icon d-lg-inline-block"></span>
+                            <span class="nav-link-title">资金</span>
+                          </a>
+                        </li>
+
+                        {% if 'focus' in site or 'fund' in site or 'sector' in site or 'filter' in site or 'link' in site %}
+                            {% if 'review' not in site %}
+                                <li class="nav-item active dropdown">
+                            {% else %}
+                                <li class="nav-item dropdown">
+                            {% endif %}
+                        {% else %}
+                          <li class="nav-item dropdown">
+                        {% endif %}
+                          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
+                             data-bs-auto-close="outside" role="button" aria-expanded="false" >
+                            <span id="icon-focus" class="nav-link-icon d-lg-inline-block"></span>
+                            <span class="nav-link-title">关注</span>
+                          </a>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item" href="/focus/list">关注清单</a>
+                            <a class="dropdown-item" href="/fund/list">基金债券</a>
+                            <a class="dropdown-item" href="/sector/list">行业板块</a>
+
+                            <div class="dropend">
+                              <a class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown" data-bs-auto-close="outside" role="button"
+                                 aria-expanded="false" id="filter-items">
+                                筛选股票
+                              </a>
+                              <div class="dropdown-menu" data-bs-popper="static" aria-labelledby="filter-items">
+                                <a href="/filter/list" class="dropdown-item">清单</a>
+                                <a href="/filter/run" class="dropdown-item">筛选</a>
+                                <a href="/filter/refer" class="dropdown-item">对比</a>
+                                <a href="/filter/config" class="dropdown-item">设定</a>
+                              </div>
+                            </div>
+
+                            <a class="dropdown-item" href="/focus/plus">添加股票</a>
+                          </div>
+                        </li>
+
+                        {% if 'trans' in site and 'review' not in site %}
+                          <li class="nav-item active dropdown">
+                        {% else %}
+                          <li class="nav-item dropdown">
+                        {% endif %}
+                          <a class="nav-link" href="/trans/list">
+                            <span id="icon-trans" class="nav-link-icon d-lg-inline-block"></span>
+                            <span class="nav-link-title">交易</span>
+                          </a>
+                        </li>
+
+                        {% if 'review' in site %}
+                          <li class="nav-item active dropdown">
+                        {% else %}
+                          <li class="nav-item dropdown">
+                        {% endif %}
+                          <a class="nav-link" href="/review/trans/list">
+                            <span id="icon-review" class="nav-link-icon d-lg-inline-block"></span>
+                            <span class="nav-link-title">复盘</span>
+                          </a>
+                        </li>
+
+                        {% if 'setting' in site  %}
+                          <li class="nav-item active dropdown">
+                        {% else %}
+                          <li class="nav-item dropdown">
+                        {% endif %}
+                          <a class="nav-link dropdown-toggle" data-bs-toggle="dropdown"
+                             data-bs-auto-close="outside" role="button" aria-expanded="false" >
+                            <span id="icon-setting" class="nav-link-icon d-lg-inline-block"></span>
+                            <span class="nav-link-title">设置</span>
+                          </a>
+                          <div class="dropdown-menu">
+                            <a class="dropdown-item" href="/setting">参数设置</a>
+                            <a class="dropdown-item" href="/files">文件管理</a>
+                            <a class="dropdown-item" href="/admin">后台管理</a>
+                            <a class="dropdown-item" href="/logout" target="_blank" rel="noopener">退出登录</a>
+                          </div>
+                        </li>
+
+                      </ul>
+
+                      <script>
+                          $("#icon-overall").html(icon_overall);
+                          $("#icon-focus").html(icon_focus);
+                          $("#icon-trans").html(icon_trans);
+                          $("#icon-review").html(icon_review);
+                          $("#icon-setting").html(icon_setting);
+                      </script>
+
+                    </div>
+                  </div>
+                </div>
+              </header>
+          </div>
+      {% endif %}
+
+      <div class="base-content">
+          {% block content %}{% endblock %}
+      </div>
+    </div>
+
+    <script>
+        window.addEventListener('resize', function () {
+            body_width = window.innerWidth;
+            body_height = window.innerHeight;
+
+            get_size_config("{{ screen }}");
+            set_frame_size();
+            set_local_storage();
+
+            {% if chart %}
+                set_chart_height();
+                set_chart_inside("{{ navi }}");
+                set_trend_width();
+            {% endif %}
+
+            set_content_top("{{ screen }}", "{{ chart }}")
+        });
+    </script>
+
+  </body>
+</html>

@@ -1,0 +1,77 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>
+        分红 - {{ data.name }} - {{ data.code }}
+    </title>
+{% endblock %}
+
+{% block content %}
+  <div id="page-content" class="page-content form-style">
+
+    <div class="col-sm-12 mt-3">
+      <div class="row">
+        <div class="col-md-6 col-sm-6">
+          <div class="mb-2">
+            <label for="code" class="form-label">股票代码</label>
+            <input type="text" id="code" value="{{ data.code }}" class="form-control" readonly>
+          </div>
+        </div>
+        <div class="col-md-6 col-sm-6">
+          <div class="mb-2">
+            <label for="name" class="form-label">股票名称</label>
+            <input type="text" id="name" value="{{ data.name }}" class="form-control" readonly>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-12">
+      <div class="row">
+        <div class="col-md-6 col-sm-6">
+          <div class="mb-2">
+            <label for="date" class="form-label">分红日期</label>
+            <input type="text" id="date" value="{{ data.date }}" placeholder="分红日期" class="form-control">
+          </div>
+        </div>
+        <div class="col-md-6 col-sm-6">
+          <div class="mb-2">
+            <label for="fee" class="form-label">分红费用</label>
+            <input id="fee" type="text" value="{{ data.fee|floatformat:2 }}" placeholder="分红时不扣税，卖出时扣税" class="form-control">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-sm-12">
+      <div class="row">
+        <div class="col-md-6 col-sm-6">
+          <div class="mb-2">
+            <label for="cash" class="form-label">分红金额</label>
+            <input id="cash" type="text" value="{{ data.cash|floatformat:2 }}" placeholder="不含费用的总金额" class="form-control">
+          </div>
+        </div>
+        <div class="col-md-6 col-sm-6">
+          <div class="mb-2">
+            <label for="qty" class="form-label">分红股数</label>
+            <input id="qty" type="text" value="{{ data.qty|floatformat:0 }}" placeholder="分红股数，不带符号" class="form-control">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider-thin-gray"></div>
+
+    <div class="row">
+      <div>
+        <div class="page-submit d-flex">
+          <a href="javascript:divd_cancel('{{ data.market }}.{{ data.code }}')" class="btn btn-link">取消</a>
+          <a href="javascript:divd_submit('{{ data.market }}.{{ data.code }}')" class="btn btn-primary ms-auto">登记</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="page-foot"></div>
+
+{% endblock %}
