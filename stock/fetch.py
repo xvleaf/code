@@ -14,39 +14,117 @@ import simplejson
 from django.db.models import Q
 
 from django.core.cache import cache
+from django_redis import get_redis_connection
 
 from models.models import StockTransFlow, StockTransDeal
 from stock import func
 from website import base
 
 
-last_request_time = 0.0
-# 最小请求时间间隔（秒）
-min_interval = 1
+MIN_INTERVAL = 1.0                               # 最小请求间隔（秒）
+REDIS_LAST_REQUEST = "stock_last_request_time"   # 最后请求时间戳
+REDIS_REQUEST_TIMING = "stock_request_timing"    # 请求状态（'0'=空闲，'1'=请求中）
+
+# Redis Lua 脚本：原子性检查并尝试获取执行权
+CHECK_AND_ACQUIRE_LUA = """
+local last_time_key = KEYS[1]
+local timing_key = KEYS[2]
+local current_time = tonumber(ARGV[1])
+local min_interval = tonumber(ARGV[2])
+
+local last_time = tonumber(redis.call('get', last_time_key) or 0)
+local timing_status = redis.call('get', timing_key)
+
+-- 如果状态键不存在或值为'0'，视为空闲
+if timing_status == false or timing_status == '0' then
+    local wait_time = min_interval - (current_time - last_time)
+    if wait_time <= 0 then
+        -- 满足间隔，获取执行权：更新最后时间，设置状态为'1'并加过期时间（10秒）
+        redis.call('set', last_time_key, current_time)
+        redis.call('set', timing_key, '1', 'EX', 10)
+        return {0, 0}   -- code=0, wait=0 表示可以立即执行
+    else
+        return {1, wait_time}   -- code=1 表示间隔未到，需等待 wait_time 秒
+    end
+else
+    -- 状态为 '1'，表示有其他请求正在执行
+    return {2, 0}   -- code=2 表示状态忙，建议等待固定短时间后重试
+end
+"""
 
 
-# 向股票网站请求频率限制
+# 获取当前 Redis 中存储的最后请求时间和状态（非原子，仅用于监控或调试）
+def redis_request_status():
+    try:
+        redis_client = get_redis_connection('default')
+        last_time = redis_client.get(REDIS_LAST_REQUEST)
+        timing = redis_client.get(REDIS_REQUEST_TIMING)
+        return {
+            'time': float(last_time) if last_time else 0.0,
+            'status': timing if timing is not None else '0'
+        }
+    except Exception:
+        return {'time': 0.0, 'status': '0'}
+
+
+# 更新最后请求时间和状态（非原子，主要用于请求完成后的重置）
+def update_request_status(current_time, timing_status):
+    try:
+        redis_client = get_redis_connection('default')
+        redis_client.set(REDIS_LAST_REQUEST, str(current_time))
+        # 覆盖后过期失效
+        redis_client.set(REDIS_REQUEST_TIMING, timing_status) 
+    except Exception:
+        pass
+
+
+# 所有 Gunicorn worker 共享 Redis 状态，保证请求间隔不低于 MIN_INTERVAL
 def stock_source_query(url, params):
-    global last_request_time, min_interval
-    
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     }
 
-    # 计算需要等待的时间
-    wait_time = min_interval - (time.time() - last_request_time)
+    redis_client = get_redis_connection('default')
 
-    # 如果间隔不足1秒，等待补足
-    if wait_time > 0:
-        time.sleep(wait_time)
-    
+    while True:
+        current_time = time.time()
+
+        try:
+            # 原子性执行 Lua 脚本
+            result = redis_client.eval(
+                CHECK_AND_ACQUIRE_LUA,
+                2,   # 两个 key
+                REDIS_LAST_REQUEST,
+                REDIS_REQUEST_TIMING,
+                str(current_time),
+                str(MIN_INTERVAL)
+            )
+            code = int(result[0])
+            wait = float(result[1])
+        except Exception:
+            time.sleep(1)
+            continue
+
+        if code == 0:
+            break
+        elif code == 1:
+            # 加微小缓冲，避免时间精度问题
+            time.sleep(wait + 0.1)
+        # code == 2
+        else:
+            # 有其他请求正在执行，等待短时间后重试
+            time.sleep(0.1)
+
+    # 执行实际 HTTP 请求
     try:
-        res = requests.get(url, params=params, headers=headers)
+        res = requests.get(url, params=params, headers=headers, timeout=10)
     except RequestException:
         res = None
-    
-    last_request_time = time.time()
-    
+    finally:
+        # 无论成功/失败，释放状态（设为 '0'）
+        # 最后请求时间已在获取锁时更新，此处只需重置状态
+        redis_client.set(REDIS_REQUEST_TIMING, '0')
+
     return res
 
 
@@ -97,7 +175,7 @@ class Link:
                     'market': each['f13'],
                     'name': each['f14']
                 })
-        except TypeError:
+        except (TypeError, AttributeError):
             lists = []
         return lists
 
@@ -130,7 +208,7 @@ class Link:
                     'market': each['f13'],
                     'name': each['f14']
                 })
-        except TypeError:
+        except (TypeError, AttributeError):
             lists = []
         return lists
 
@@ -162,7 +240,7 @@ class Stock:
             res = stock_source_query(url, params).json()['data']['diff']
             # 排除掉以 4 开头的代码
             data = [item for item in res if not item["f12"].startswith("4")]
-        except TypeError:
+        except (TypeError, AttributeError):
             data = []
         
         return data
@@ -189,7 +267,7 @@ class Stock:
                 'fields': 'f2,f3,f12,f13,f14',
                 'secids': secids
             }
-
+            
             try:
                 res = stock_source_query(url, params).json()['data']['diff']
                 for each in res:
@@ -201,7 +279,7 @@ class Stock:
                         'close': round(float(each['f2']) / 100, 2),
                         'change': base.format_decimal(float(each['f3']) / 100, 2)
                     })
-            except TypeError:
+            except (TypeError, AttributeError):
                 data = []
 
         return data
@@ -255,7 +333,7 @@ class Fund:
         try:
             res = stock_source_query(url, params).json()
             data = res['data']['diff']
-        except TypeError:
+        except (TypeError, AttributeError):
             data = []            
         return data
 
@@ -290,7 +368,7 @@ class Fund:
                             'change': base.format_decimal(float(each['f3']) / 100, 2),
                             'cap': base.format_decimal(float(each['f20']) / 100000000, 1)
                         })
-            except TypeError:
+            except (TypeError, AttributeError):
                 data = []
         return data
 
@@ -326,7 +404,7 @@ class Sector:
         try:
             res = stock_source_query(url, params).json()
             data = res['data']['diff']
-        except TypeError:
+        except (TypeError, AttributeError):
             data = []
         return data
 
@@ -358,7 +436,7 @@ class Sector:
                 }
                 for i, each in enumerate(res)
             ] if lists else []
-        except TypeError:
+        except (TypeError, AttributeError):
             data = []
         return data
 
@@ -423,10 +501,9 @@ def quote(market_with_code: str, cat: str, deci):
     }
 
     try:
-        res = stock_source_query(url, params)
-        res = res.json()
+        res = stock_source_query(url, params).json()
         data = res['data']
-    except TypeError:
+    except (TypeError, AttributeError):
         data = []
 
     if data:
@@ -621,7 +698,7 @@ def trend(request, market_with_code, init, deci):
             'ohlc': ohlc,
             'volume': volume
         }
-    except TypeError:
+    except (TypeError, AttributeError):
         return {}
 
 class Kline:
@@ -745,7 +822,7 @@ class Kline:
         try:    
             res = stock_source_query(url, params).json()
             data = res['data']
-        except TypeError:
+        except (TypeError, AttributeError):
             data = []
         return data
 
