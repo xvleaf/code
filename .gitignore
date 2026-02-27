@@ -1,6 +1,7 @@
-**/__pycache__/**
-venv/**
-log/info.log
+.env
+venv/
+__pycache__/
+*.pyc
+log/*
 data.db
-website/settings.py
 manual
