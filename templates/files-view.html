@@ -1,0 +1,401 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>文件管理</title>
+{% endblock %}
+
+{% block refer %}
+  {% load static %}
+  <link rel="stylesheet" type="text/css" href="{% static 'base/lib/filepond/filepond.css' %}">
+  <script src="{% static 'base/lib/filepond/filepond.min.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+  <div class="page-content">
+    <div class="card card-body">
+      <div class="sticky-top bg-white z-index-3">
+        <div class="disp-flex-left margin-top-1 margin-btm-1">
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span class="color-dimgrey pointer" onclick="folder_path('home', '{{ folder }}', '')">
+                <svg width="20" height="20" viewBox="0 0 24 24"
+                     stroke-width="1" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M11 11h2v2h-2z"></path>
+                  <path d="M3.634 15.634l1.732 -1l1 1.732l-1.732 1z"></path>
+                  <path d="M11 19h2v2h-2z"></path>
+                  <path d="M18.634 14.634l1.732 1l-1 1.732l-1.732 -1z"></path>
+                  <path d="M17.634 7.634l1.732 -1l1 1.732l-1.732 1z"></path>
+                  <path d="M11 3h2v2h-2z"></path>
+                  <path d="M3.634 8.366l1 -1.732l1.732 1l-1 1.732z"></path>
+                </svg>
+            </span>
+
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span class="color-dimgrey pointer" onclick="folder_path('up', '{{ folder }}', '')">
+                <svg width="23" height="23" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M12 5l0 14"></path>
+                  <path d="M18 11l-6 -6"></path>
+                  <path d="M6 11l6 -6"></path>
+                </svg>
+            </span>
+
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span class="color-dimgrey pointer" onclick="folder_path('refresh', '{{ folder }}', '')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M19.933 13.041a8 8 0 1 1 -9.925 -8.788c3.899 -1 7.935 1.007 9.425 4.747"></path>
+                  <path d="M20 4v5h-5"></path>
+                </svg>
+            </span>
+
+            <span class="color-lightgrey">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+            </span>
+
+            <span class="color-dimgrey pointer" onclick="file_manage('new-file', '{{ folder }}')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                      <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                      <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                      <path d="M12 11l0 6"></path>
+                      <path d="M9 14l6 0"></path>
+                    </svg>
+            </span>
+
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span class="color-dimgrey pointer" onclick="file_manage('new-folder', '{{ folder }}')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M12 19h-7a2 2 0 0 1 -2 -2v-11a2 2 0 0 1 2 -2h4l3 3h7a2 2 0 0 1 2 2v3.5"></path>
+                  <path d="M16 19h6"></path>
+                  <path d="M19 16v6"></path>
+                </svg>
+            </span>
+
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span id="file-rename" class="color-lightgrey" onclick="file_manage('rename', '{{ folder }}')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M14 3v4a1 1 0 0 0 1 1h4"></path>
+                  <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z"></path>
+                  <path d="M9 14v.01"></path>
+                  <path d="M12 14v.01"></path>
+                  <path d="M15 14v.01"></path>
+                </svg>
+            </span>
+
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span id="file-copy" class="color-lightgrey" onclick="file_manage('copy', '{{ folder }}')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M15 3v4a1 1 0 0 0 1 1h4"></path>
+                  <path d="M18 17h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h4l5 5v7a2 2 0 0 1 -2 2z"></path>
+                  <path d="M16 17v2a2 2 0 0 1 -2 2h-7a2 2 0 0 1 -2 -2v-10a2 2 0 0 1 2 -2h2"></path>
+                </svg>
+            </span>
+
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span id="file-cut" class="color-lightgrey" onclick="file_manage('cut', '{{ folder }}')">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M4.698 4.034l16.302 7.966l-16.302 7.966a.503 .503 0 0 1 -.546 -.124a.555 .555 0 0 1 -.12
+                  -.568l2.468 -7.274l-2.468 -7.274a.555 .555 0 0 1 .12 -.568a.503 .503 0 0 1 .546 -.124z"></path>
+                  <path d="M6.5 12h14.5"></path>
+                </svg>
+            </span>
+
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span id="file-delete" class="color-lightgrey" onclick="file_manage('delete', '{{ folder }}')">
+                <svg width="23" height="23" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M18 6l-12 12"></path>
+                  <path d="M6 6l12 12"></path>
+                </svg>
+            </span>
+
+            <span class="color-lightgrey">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M12 5v14"></path>
+                </svg>
+            </span>
+
+            <span id="file-download" class="color-lightgrey" onclick="file_manage('download', '{{ folder }}')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M19 18a3.5 3.5 0 0 0 0 -7h-1a5 4.5 0 0 0 -11 -2a4.6 4.4 0 0 0 -2.1 8.4"></path>
+                  <path d="M12 13l0 9"></path>
+                  <path d="M9 19l3 3l3 -3"></path>
+                </svg>
+            </span>
+
+            <span class="pad-left-1 pad-right-1"></span>
+
+            <span id="file-upload" class="color-dimgrey pointer" onclick="file_manage('upload', '{{ folder }}')">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                  <path d="M7 18a4.6 4.4 0 0 1 0 -9a5 4.5 0 0 1 11 2h1a3.5 3.5 0 0 1 0 7h-1"></path>
+                  <path d="M9 15l3 -3l3 3"></path>
+                  <path d="M12 12l0 9"></path>
+                </svg>
+            </span>
+        </div>
+
+        <div class="input-group margin-btm-1">
+            <label for="folder" class="input-group-text">@</label>
+            <input id="folder" type="text" class="form-control" autocomplete="off" value="{{ folder }}" onchange="folder_path('set', '', '')">
+        </div>
+
+        <div class="divider-thin-gray"></div>
+
+      </div>
+
+      <table id="table-list" class="table">
+        <thead>
+          <tr class="table-title-background">
+            <th class="table-title-text">文件名称</th>
+            <th class="table-title-text">修改日期</th>
+            <th class="table-title-text">文件类型</th>
+            <th class="table-title-text">文件大小</th>
+          </tr>
+        </thead>
+
+        <tbody id="table-body" class="table-tbody">
+
+            {% for file in files %}
+                <tr>
+                  <td colspan="4" class="table-divider-market"></td>
+                </tr>
+
+                <tr>
+                    <td class="table-cell-text disp-flex-left">
+                        <label>
+                            <input type="checkbox" name="filename" value="{{ file.name }}"
+                                   class="form-check-input margin-right-2" onchange="select_files_click()">
+                        </label>
+                        <span class="pointer {% if file.type == '文件夹' %}color-royalblue{% endif %}"
+                               onclick="folder_path('click', '{{ folder }}', '{{ file.name }}')">{{ file.name }}</span>
+                    </td>
+                    <td class="table-cell-text"><label>{{ file.date|date:"Y/m/d H:i" }}</label></td>
+                    <td class="table-cell-text"><label>{{ file.type }}</label></td>
+                    <td class="table-cell-text"><label>{{ file.size }}</label></td>
+                </tr>
+            {% endfor %}
+        </tbody>
+      </table>
+
+      <input id="filepond" type="file" class="filepond disp-none" name="filepond" multiple />
+
+    </div>
+  </div>
+
+  <div class="page-foot"></div>
+
+  <script>
+    // 用于 folder_path 函数
+    let editing = false;
+    if (localStorage.getItem('files-copy')) {
+		document.getElementById('file-copy').classList.remove('color-lightgrey');
+    }
+
+    if (localStorage.getItem('files-cut')) {
+		document.getElementById('file-cut').classList.remove('color-lightgrey');
+    }
+
+    let filepond_input, file_pond_inst;
+
+    let filepond_lang = {
+        labelIdle: '',
+        labelInvalidField: '字段包含无效文件',
+        labelFileWaitingForSize: '计算文件大小',
+        labelFileSizeNotAvailable: '文件大小不可用',
+        labelFileLoading: '加载',
+        labelFileLoadError: '加载错误',
+        labelFileProcessing: '上传',
+        labelFileProcessingComplete: '已提交',
+        labelFileProcessingAborted: '上传已取消',
+        labelFileProcessingError: '上传出错',
+        labelFileProcessingRevertError: '还原出错',
+        labelFileRemoveError: '删除出错',
+        labelTapToCancel: '点击取消',
+        labelTapToRetry: '点击重试',
+        labelTapToUndo: '点击撤消',
+        labelButtonRemoveItem: '删除',
+        labelButtonAbortItemLoad: '中止',
+        labelButtonRetryItemLoad: '重试',
+        labelButtonAbortItemProcessing: '取消',
+        labelButtonUndoItemProcessing: '撤消',
+        labelButtonRetryItemProcessing: '重试',
+        labelButtonProcessItem: '上传',
+        labelMaxFileSizeExceeded: '文件太大',
+        labelMaxFileSize: '最大值: {filesize}',
+        labelMaxTotalFileSizeExceeded: '超过最大文件大小',
+        labelMaxTotalFileSize: '最大文件大小：{filesize}',
+        labelFileTypeNotAllowed: '文件类型无效',
+        fileValidateTypeLabelExpectedTypes: '应为 {allButLastType} 或 {lastType}',
+        imageValidateSizeLabelFormatError: '不支持图像类型',
+        imageValidateSizeLabelImageSizeTooSmall: '图像太小',
+        imageValidateSizeLabelImageSizeTooBig: '图像太大',
+        imageValidateSizeLabelExpectedMinSize: '最小值: {minWidth} × {minHeight}',
+        imageValidateSizeLabelExpectedMaxSize: '最大值: {maxWidth} × {maxHeight}',
+        imageValidateSizeLabelImageResolutionTooLow: '分辨率太低',
+        imageValidateSizeLabelImageResolutionTooHigh: '分辨率太高',
+        imageValidateSizeLabelExpectedMinResolution: '最小分辨率：{minResolution}',
+        imageValidateSizeLabelExpectedMaxResolution: '最大分辨率：{maxResolution}'
+    }
+
+    $(function () {
+        let not_upload_files = [];
+
+        filepond_input = document.getElementById('filepond');
+        filepond_input.classList.remove('disp-none');
+
+        FilePond.setOptions(filepond_lang);
+
+        file_pond_inst = FilePond.create(
+            filepond_input , {
+                // 允许多文件上传
+                allowMultiple: true,
+                server: {
+                    url: '/files',
+                    process: {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRFToken': csrf_token,
+                        },
+                        // 每个文件上传成功均执行
+                        onload: (response) => {
+                            let data = JSON.parse(response);
+                            if (data['msg'] !== 'done') {
+                                not_upload_files.push(data['name']);
+                            }
+                        },
+                        // 每个文件上传失败均执行
+                        onerror: () => {
+                        },
+                        ondata: (form_data) => {
+                            // 在这里添加自定义参数
+                            form_data.append('folder', '{{ folder }}');
+                            // 返回添加了自定义参数的 formData
+                            return form_data;
+                        },
+                    },
+                },
+            }
+        )
+
+        filepond_input.addEventListener('change', (event) => {
+            const files = Array.from(event.target.files);
+            files.forEach(file => {
+                // 手动添加文件到FilePond实例
+                file_pond_inst.addFile(file);
+            });
+        });
+
+        file_pond_inst.on('removefile', (error, file) => {
+            // 当文件被移除时触发
+            if (error) {
+                console.error('移除时出错 ！', error);
+                return;
+            }
+
+            if (!not_upload_files.includes(file.filename)) {
+                let post = {'func': 'delete', 'folder': '{{ folder }}', 'files': JSON.stringify([file.filename])}
+
+                $.ajax({
+                    url: `/files`,
+                    cache: false,
+                    type: "POST",
+                    data: post,
+                    dateType: "json",
+                    async: false,
+                    beforeSend: function(xhr){
+                        xhr.setRequestHeader("X-CSRFToken", csrf_token);
+                    },
+                    error: function () {
+                        layer.msg('删除时出错 ！', {
+                            icon: 7,
+                            time: 2000
+                        }, function(){
+                        });
+                    }
+                });
+            } else {
+                layer.msg('文件未曾上传 ！', {
+                    icon: 7,
+                    time: 2000
+                }, function(){
+                });
+            }
+        });
+
+        let links = document.getElementsByTagName('a');
+        for (let i = 0; i < links.length; i++) {
+            let link = links[i];
+            if (link.textContent.includes("Powered by")) {
+                link.remove();
+            }
+        }
+
+        // 不设置延时，file_pond_inst 仍会初始化回来
+        setTimeout(function() {
+            // 目的是隐藏点击添加文件功能
+            let input_element = document.querySelector('input[name="filepond"]');
+            if (input_element) {
+                input_element.classList.add('disp-none');
+            }
+
+            let drops = document.querySelector('.filepond--drop-label');
+            drops.remove();
+        }, 1000);
+    })
+
+    function file_manage(action, folder) {
+        let selected_files = get_selected_files();
+        let selected_count = selected_files.length;
+
+        if (action === 'new-folder' || action === 'new-file') {
+            file_new_item(action, folder);
+        } else if (action === 'rename') {
+            editing = selected_count === 1 ? file_rename_action(folder) : false;
+        } else if (action === 'copy') {
+            file_copy_or_cut('copy', folder, selected_files, selected_count);
+        } else if (action === 'cut') {
+            file_copy_or_cut('cut', folder, selected_files, selected_count);
+        } else if (action === 'delete') {
+            file_delete_action(folder, selected_files, selected_count);
+        } else if (action === 'download'){
+            file_download_action(folder, selected_files, selected_count);
+        // else if (action === 'upload')
+        }else {
+            filepond_input.click();
+        }
+    }
+
+  </script>
+
+{% endblock %}

@@ -1,0 +1,6 @@
+**/__pycache__/**
+venv/**
+log/info.log
+data.db
+website/settings.py
+manual

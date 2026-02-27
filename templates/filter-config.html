@@ -1,0 +1,277 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>筛选 - 设定</title>
+{% endblock %}
+
+{% block refer %}
+{% endblock %}
+
+{% block content %}
+    <div id="page-content" class="page-content bg-white">
+      <div id="config" class="accordion" role="tablist" aria-multiselectable="true">
+          <div class="accordion-item">
+            <div class="accordion-header" role="tab">
+              <button data-bs-target="#filter-display" class="accordion-button {% if not expand.display %}collapsed{% endif %}"
+                      data-bs-toggle="collapse" aria-expanded="true">显示记录数量</button>
+            </div>
+
+            <div id="filter-display" class="accordion-collapse collapse {% if expand.display %}show{% endif %}"
+                 role="tabpanel" data-bs-parent="#config">
+              <div class="accordion-body pt-0">
+                <div>
+                    <div class="col-sm-12">
+                      <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                          <div class="mb-2">
+                            <label for="display-config" class="form-label"></label>
+                            <input id="display-config" type="text" value="{{ display }}" placeholder="显示记录数量"
+                                   class="form-control" onchange="filter_config('display')">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" role="tab">
+              <button data-bs-target="#filter-start" class="accordion-button {% if not expand.start %}collapsed{% endif %}"
+                      data-bs-toggle="collapse" aria-expanded="false">数据起始日期</button>
+            </div>
+
+            <div id="filter-start" class="accordion-collapse collapse {% if expand.start %}show{% endif %}"
+                 role="tabpanel" data-bs-parent="#config">
+              <div class="accordion-body pt-0">
+                <div>
+                    <div class="col-sm-12">
+                      <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                          <div class="mb-2">
+                            <label for="start-day-config" class="form-label">日线日期</label>
+                            <input id="start-day-config" type="text" value="{{ start.day }}" placeholder="日线起始日期"
+                                   class="form-control" onchange="filter_config('start')">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-sm-12">
+                      <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                          <div class="mb-2">
+                            <label for="start-week-config" class="form-label">周线日期</label>
+                            <input id="start-week-config" type="text" value="{{ start.week }}" placeholder="周线起始日期"
+                                   class="form-control" onchange="filter_config('start')">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="col-sm-12">
+                      <div class="row">
+                        <div class="col-md-6 col-sm-6">
+                          <div class="mb-2">
+                            <label for="start-month-config" class="form-label">月线日期</label>
+                            <input id="start-month-config" type="text" value="{{ start.month }}" placeholder="月线起始日期"
+                                   class="form-control" onchange="filter_config('start')">
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                </div>
+
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" role="tab">
+              <button data-bs-target="#filter-term" class="accordion-button {% if not expand.term %}collapsed{% endif %}"
+                      data-bs-toggle="collapse" aria-expanded="false">当前筛选条件</button>
+            </div>
+
+            <div id="filter-term" class="accordion-collapse collapse {% if expand.term %}show{% endif %}"
+                 role="tabpanel" data-bs-parent="#config">
+              <div class="accordion-body pt-0">
+                <div>
+                    <div class="col-sm-12">
+                      <div class="row">
+                        <div class="disp-flex">
+                            <div class="disp-flex-left">
+                              <label for="filter-config" class="form-label">选择条件：</label>
+                              <select id="filter-config" class="filter-select" onchange="filter_config('filter')">
+                                  {% for filter in filters %}
+                                      <option value="{{ filter.index }}"
+                                              {% if filter.select %}
+                                              selected
+                                              {% endif %}
+                                      >{{ filter.value }}</option>
+                                  {% endfor %}
+                              </select>
+                            </div>
+
+                            {% if not filters.0.select %}
+                                <div class="disp-flex pointer">
+                                  <span class="pad-right-2" onclick="filter_config_handle('filter', 0)">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                         fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                      <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                      <path d="M18 6l-12 12"></path>
+                                      <path d="M6 6l12 12"></path>
+                                    </svg>
+                                  </span>
+                                </div>
+                            {% endif %}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+                    <div class="col-sm-12">
+                      <div class="row">
+
+                            {% for criteria in filter_criteria %}
+                                <div class="disp-flex-left">
+                                  <span class="form-label pad-left-1">⟡ {{ criteria|safe }}</span>
+                                </div>
+                            {% endfor %}
+                      </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" role="tab">
+              <button data-bs-target="#filter-option" class="accordion-button {% if not expand.option %}collapsed{% endif %}"
+                      data-bs-toggle="collapse" aria-expanded="false">当前选股集合</button>
+            </div>
+
+            <div id="filter-option" class="accordion-collapse collapse {% if expand.option %}show{% endif %}"
+                 role="tabpanel" data-bs-parent="#config">
+              <div class="accordion-body pt-0">
+                <div>
+                    <div class="col-sm-12">
+                      <div class="row">
+                            <div class="disp-flex">
+                                <div class="disp-flex-left">
+                                  <label for="base-config" class="form-label">选择集合：</label>
+
+                                  <label for="cat-config" class="form-label"></label>
+                                  <select id="cat-config" class="filter-select" onchange="filter_config('cat')">
+                                    <option value="stock" {% if cat == 'stock' %} selected {% endif %}>股票</option>
+                                    <option value="fund" {% if cat == 'fund' %} selected {% endif %}>基金</option>
+                                    <option value="sector" {% if cat == 'sector' %} selected {% endif %}>板块</option>
+                                  </select>
+
+                                  <select id="base-config" class="filter-select" onchange="filter_config('base')">
+                                      {% for base in bases %}
+                                          <option value="{{ base.index }}" {% if base.select %} selected {% endif %}>{{ base.value }}</option>
+                                      {% endfor %}
+                                  </select>
+                                </div>
+
+                                <div class="disp-flex pointer">
+                                  <span class="pad-right-2" onclick="filter_config_handle('base', {% if bases.0.select %}1{% else %}0{% endif %})">
+                                    {% if bases.0.select %}
+                                        <svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                             fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                            <path d="M20 11a8.1 8.1 0 0 0 -15.5 -2m-.5 -4v4h4"></path>
+                                            <path d="M4 13a8.1 8.1 0 0 0 15.5 2m.5 4v-4h-4"></path>
+                                        </svg>
+                                    {% else %}
+                                        <svg width="18" height="18" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+                                             fill="none" stroke-linecap="round" stroke-linejoin="round">
+                                          <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+                                          <path d="M18 6l-12 12"></path>
+                                          <path d="M6 6l12 12"></path>
+                                        </svg>
+                                    {% endif %}
+                                  </span>
+                                </div>
+                            </div>
+                      </div>
+                    </div>
+
+                    <div class="divider-dashed-lightgray margin-btm-2 margin-top-2"></div>
+
+                    <div class="col-sm-12">
+                      <div class="row">
+                            {% for criteria in base_criteria %}
+                                <div class="disp-flex-left">
+                                  <span class="form-label pad-left-1">⟡ {{ criteria|safe }}</span>
+                                </div>
+                            {% endfor %}
+                      </div>
+                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {% if cat != 'sector' %}
+              <div class="accordion-item">
+                <div class="accordion-header" role="tab">
+                  <button data-bs-target="#filter-range" class="accordion-button {% if not expand.range %}collapsed{% endif %}"
+                          data-bs-toggle="collapse" aria-expanded="false">当前筛选号段</button>
+                </div>
+
+                <div id="filter-range" class="accordion-collapse collapse {% if expand.range %}show{% endif %}"
+                     role="tabpanel" data-bs-parent="#config">
+                  <div class="accordion-body pt-0">
+                    <div>
+                        <div class="col-sm-12">
+                          <div class="row">
+                              <div class="disp-flex-left">
+                                {% for range in ranges %}
+                                    <label>&nbsp;</label>
+                                    <input type="checkbox" id="range-{{ range.index }}" {% if range.select %} checked {% endif %}
+                                           class="form-check-input" onchange="filter_config_range(this)">
+                                    <label for="range-{{ range.index }}">&nbsp;{{ range.value }}&nbsp;</label>
+                                {% endfor %}
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+          {% endif %}
+
+
+          <div class="accordion-item">
+            <div class="accordion-header" role="tab">
+              <button data-bs-target="#filter-refer" class="accordion-button {% if not expand.refer %}collapsed{% endif %}"
+                      data-bs-toggle="collapse" aria-expanded="false">对比参照集合</button>
+            </div>
+
+            <div id="filter-refer" class="accordion-collapse collapse {% if expand.refer %}show{% endif %}"
+                 role="tabpanel" data-bs-parent="#config">
+              <div class="accordion-body pt-0">
+                <div class="col-sm-12">
+                  <div class="row">
+                    <div class="disp-flex-left">
+                      <label for="refer-config" class="form-label"></label>
+                      <select id="refer-config" class="filter-select" onchange="filter_config('refer')">
+                          {% for base in bases %}
+                              <option value="{{ base.index }}" {% if base.refer %} selected {% endif %}>{{ base.value }}</option>
+                          {% endfor %}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+      </div>
+    </div>
+
+    <div class="page-foot"></div>
+{% endblock %}

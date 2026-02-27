@@ -1,0 +1,60 @@
+{% extends "base-view.html" %}
+
+{% block title %}
+    <title>资金</title>
+{% endblock %}
+
+{% block refer %}
+  {% load static %}
+  <script src="{% static 'base/lib/Highcharts/js/highcharts.js' %}"></script>
+{% endblock %}
+
+{% block content %}
+    <div id="page-chart" class="page-chart"></div>
+
+    <div id="page-content" class="page-content">
+        <div class="col-sm-12 mt-3">
+          <div class="row">
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="total" class="form-label">资产总值</label>
+                <input id="total" type="text" value="{{ data.total|floatformat:2 }}" placeholder="资产总值" class="form-control" readonly>
+              </div>
+              <div class="mb-2">
+                <label for="cash" class="form-label">流动资金</label>
+                <input id="cash" type="text" value="{{ data.cash|floatformat:2 }}" class="form-control color-purple"
+                         onchange="overall_value_changed('cash')">
+              </div>
+              <div class="mb-2">
+                <label for="stock" class="form-label">股票市值</label>
+                <input id="stock" type="text" value="{{ data.stock|floatformat:2 }}" class="form-control" readonly>
+              </div>
+            </div>
+
+            <div class="col-md-6 col-sm-6">
+              <div class="mb-2">
+                <label for="risk" class="form-label">风险资金</label>
+                <input id="risk" type="text" value="{{ data.risk|floatformat:2 }}" class="form-control" readonly>
+              </div>
+              <div class="mb-2">
+                <label for="permit" class="form-label">风险限额</label>
+                <input id="permit" type="text" value="{{ data.permit|floatformat:2 }}" placeholder="风险限额" class="form-control color-purple"
+                         onchange="overall_value_changed('permit')">
+              </div>
+              <div class="mb-2">
+                <label for="profit" class="form-label">投资收益</label>
+                <input id="profit" type="text" value="{{ data.profit|floatformat:2 }}" class="form-control" readonly>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+
+    <div class="page-foot"></div>
+
+    <script>
+        overall_chart_init({{ ohlc|safe }});
+
+    </script>
+
+{% endblock %}
