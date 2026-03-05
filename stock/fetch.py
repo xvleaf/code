@@ -237,12 +237,20 @@ class Stock:
             'fields': 'f12,f13,f14'
         }
 
-        try:
-            res = stock_source_query(url, params).json()['data']['diff']
-            # 排除掉以 4 开头的代码
-            data = [item for item in res if not item["f12"].startswith("4")]
-        except (TypeError, AttributeError):
-            data = []
+        data = []
+        page = 1
+
+        while True:
+            params["pn"] = page
+
+            try:                
+                res = stock_source_query(url, params).json()['data']['diff']
+                # 排除掉以 4 开头的代码
+                data.append(item for item in res if not item["f12"].startswith("4"))
+                
+                page += 1
+            except (TypeError, AttributeError):
+                break
         
         return data
 
