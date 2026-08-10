@@ -1,443 +1,329 @@
-let doc = document.documentElement,
-
-	frame_width_setting_scale,
-	frame_width_setting_min,
-	frame_width_setting_max,
-
-	chart_height_setting_scale,
-	chart_height_setting_min,
-	chart_height_setting_max,
-
-	quote_width_setting_min,
-	quote_width_setting_max,
-	quote_width_setting_gap,
-
-	// 页面渲染框架宽度，chart 宽度与 frame 宽度一致
-	frame_width,
-	// 页面渲染框架高度
-	frame_height,
-	// 页面渲染框架距离左边距离
-	frame_left;
-
-
-function is_mobile() {
-	return !!(navigator.userAgent.match(/(phone|iPhone|ios|iPad|Android|Mobile|WebOS)/i));
+// 需与 main.css 一起修改
+export const BREAKPOINT_MD = 992;
+// 屏幕高度阈值：视口高度小于该值才允许滚动自动隐藏导航栏，大于等于始终显示
+export const SCREEN_HEIGHT_THRESHOLD = 800;
+export const RESIZE_DELAY_LAYOUT = 150;
+// 初始化保护时长
+const INIT_PROTECT_DELAY = 500;
+// 用于外部控制导航锁定状态，false 为不锁定
+const NAV_LOCKED = false;
+let nav = null;
+let pageContent = null;
+let gapEl = null;
+let navHeight = 0;
+let layoutResizeTimer = null;
+let frameTicking = false;
+let lastScrollY = 0;
+let disableNavAutoHide = false;
+let isNavVisible = true;
+let isInitializing = false;
+let lastIsMobile = null;
+let subMenuAbortController = null;
+let isBaseInited = false;
+let baseGlobalAbort = null;
+// 路由匹配优先级，长前缀放前面
+const NAV_ACTIVE_RULES = [
+    { selector: 'a.nav-link[href="/review/trans/list"]', prefixes: ['/review/trans'] },
+    { selector: '#reviewDropdown', prefixes: ['/review', '/setting', '/files', '/admin', '/logout'] },
+    { selector: '#focusDropdown', prefixes: ['/focus', '/fund', '/sector', '/filter', '/focus/view'] },
+    { selector: 'a.nav-link[href="/trans/list"]', prefixes: ['/trans'] },
+    { selector: 'a.nav-link[href="/overall"]', prefixes: ['/overall'] },
+];
+// ====================== 对外导航工具函数 ======================
+/** 获取导航是否隐藏 */
+export function isMainNavHidden() {
+    if (!nav) return false;
+    return nav.classList.contains('hidden');
 }
-
-
-function setting_config_changed(item, key) {
-	layer.confirm('<p style="text-align:center">确定修改参数 ？</p>', {
-		title: '确认',
-		btnAlign: 'c', //按钮居中
-		btn: ['确定', '取消'],
-		shade: 0.5 //遮罩透明度
-	// 按钮1事件
-	}, function () {
-		let path = [];
-		let value;
-		let mapping;
-
-		if (item !== 'kline') {
-			mapping = {
-				'icp': {'path': [], 'aim': {'name': 'icp-name', 'url': 'icp-url'}},
-				'viewport': {'path': [], 'aim': {'fit': 'viewport-fit'}},
-				'frame': {
-					'path': ['frame-screen', 'frame-device'],
-					'aim': {'scale': 'frame-scale', 'min': 'frame-min', 'max': 'frame-max'}
-				},
-				'chart': {
-					'path': ['chart-screen', 'chart-device'],
-					'aim': {'scale': 'chart-scale', 'min': 'chart-min', 'max': 'chart-max'}
-				},
-				'quote': {
-					'path':['quote-device'],
-					'aim': {'min': 'quote-min', 'max': 'quote-max'}
-				},
-				'view': {
-					'path': [],
-					'aim': {
-						'focus': 'view-focus', 'fund': 'view-fund', 'sector': 'view-sector',
-						'filter': 'view-filter', 'trans': 'view-trans', 'review': 'view-review', 'query': 'view-query'
-					}
-				},
-				'page': {
-					'path': [],
-					'aim': {
-						'fund': 'page-fund:int', 'sector': 'page-sector:int',
-						'filter': 'page-filter:int', 'review': 'page-review:int'
-					}
-				},
-				'time': {
-					'path': [],
-					'aim': {
-						'auction': 'time-auction', 'open': 'time-open', 'break': 'time-break',
-						'resume': 'time-resume', 'close': 'time-close'
-					}
-				},
-				'cache': {
-					'path': [],
-					'aim': {'day': 'cache-day:int', 'long': 'cache-long:int', 'short': 'cache-short:int'}
-				},
-				'refresh': {
-					'path': [],
-					'aim': {'interval': 'refresh-interval:int'}
-				},
-				'stats': {
-					'path': [],
-					'aim': {'range': 'stats-range:int'}
-				},
-				'fee': {
-					'path': ['fee-market', 'fee-type', 'fee-intent'],
-					'aim': {
-						'stamp': 'fee-stamp:float', 'trans': 'fee-trans:float',
-						'commi-rate': 'commi-rate:float', 'commi-min': 'commi-min:float'
-					}
-				},
-			}
-		} else {
-			if (key.includes('ema-')) {
-				mapping = {
-					'kline': {
-						'path': ['ema-period'],
-						'aim': {'ema-k': 'ema-k', 'ema-d': 'ema-d'}
-					}
-				}
-			}
-			else if (key.includes('ma-')) {
-				mapping = {
-					'kline': {
-						'path': ['ma-period'],
-						'aim': {'ma-a': 'ma-a', 'ma-v': 'ma-v'}
-					}
-				}
-			// else if (key.includes('density')
-			// || key.includes('start')
-			// || key.includes('end')
-			// || key === 'right'
-			// || key === 'period')
-			} else {
-				mapping = {
-					'kline': {
-						'path': [],
-						'aim': {
-							'density-std': 'density-std', 'density-min': 'density-min', 'density-max': 'density-max',
-							'start-day': 'start-day', 'start-week': 'start-week', 'start-month': 'start-month',
-							'end-day': 'end-day', 'end-week': 'end-week', 'end-month': 'end-month',
-							'right': 'kline-right', 'period': 'kline-period'
-						}
-					}
-				}
-			}
-		}
-
-		let element = mapping[item]['aim'][key]
-		if (element.includes(':int') || element.includes(':float')) {
-			let elements = element.split(':')
-			value = document.getElementById(elements[0]).value + ':' + elements[1];
-		} else {
-			value = document.getElementById(element).value;
-		}
-
-		if (key.includes('ema-') || key.includes('ma-')) {
-			let keys = key.split('-')
-			path.push(keys[0])
-			path.push(document.getElementById(mapping[item]['path'][0]).value);
-			path.push(keys[1])
-		} else {
-			for (let each of mapping[item]['path']) {
-				path.push(document.getElementById(each).value);
-			}
-			path.push(...key.split('-'));
-		}
-
-		let url = `setting?r=${random()}`;
-		let post = {"func": "set", 'item': item, 'path': JSON.stringify(path), 'value': value};
-
-		let data = ajax_sync(url, post);
-		if (data) {
-			if (data['msg'] === 'done') {
-				if (item === 'frame' || item === 'chart' || item === 'quote') {
-					localStorage.removeItem('size');
-					if (item === 'frame') {
-						window.location.href = `/setting`;
-					}
-				}
-
-				layer.msg('参数修改完成 ！', {
-					icon: 7,
-					time: 2000
-				}, function(){
-				});
-			} else {
-				layer.msg(data['msg'], {
-					icon: 7,
-					time: 2000
-				}, function(){
-				});
-			}
-		} else {
-			layer.msg('服务器错误 ！', {
-				icon: 7,
-				time: 2000
-			}, function(){
-			});
-		}
-	// 按钮2事件
-	}, function () {
-	});
+/** 获取导航高度 */
+export function getMainNavHeight() {
+    return navHeight || 0;
 }
-
-
-function get_setting_config(item, key) {
-	let values;
-	if (item === 'frame') {
-		values = {'screen': $("#frame-screen").val(), 'device': $("#frame-device").val()};
-	} else if (item === 'chart') {
-		values = {'screen': $("#chart-screen").val(), 'device': $("#chart-device").val()};
-	} else if (item === 'quote') {
-		values = {'device': $("#quote-device").val()};
-	} else if (item === 'kline') {
-		if (key === 'ema-period') {
-			values = {'ema-period': $("#ema-period").val()};
-		} else {
-			values = {'ma-period': $("#ma-period").val()};
-		}
-	// else if (item === 'fee')
-	} else {
-		values = {'market': $("#fee-market").val(), 'type': $("#fee-type").val(), 'intent': $("#fee-intent").val()};
-	}
-
-	let url = `setting?r=${random()}`;
-	let post = {"func": "get", 'item': item, 'key': key, 'values': JSON.stringify(values)};
-	let data = ajax_sync(url, post);
-
-	if (data) {
-		if (item === 'frame') {
-			$("#frame-scale").val(data[item]['scale']);
-			$("#frame-min").val(data[item]['min']);
-			$("#frame-max").val(data[item]['max']);
-		} else if (item === 'chart') {
-			$("#chart-scale").val(data[item]['scale']);
-			$("#chart-min").val(data[item]['min']);
-			$("#chart-max").val(data[item]['max']);
-		} else if (item === 'quote') {
-			$("#quote-min").val(data[item]['min']);
-			$("#quote-max").val(data[item]['max']);
-		} else if (item === 'kline') {
-			if (key === 'ema-period') {
-				$("#ema-k").val(data[item]['ema']['k']);
-				$("#ema-d").val(data[item]['ema']['d']);
-			} else {
-				$("#ma-a").val(data[item]['ma']['a']);
-				$("#ma-v").val(data[item]['ma']['v']);
-			}
-		// else if (item === 'fee')
-		} else {
-			$("#fee-stamp").val(data[item]['stamp']);
-			$("#fee-trans").val(data[item]['trans']);
-			$("#commi-rate").val(data[item]['commi']['rate']);
-			$("#commi-min").val(data[item]['commi']['min']);
-		}
-	} else {
-		layer.msg('服务器错误 ！', {
-			icon: 7,
-			time: 2000
-		}, function(){
-		});
-	}
+/** 导出屏幕高度阈值供外部读取 */
+export function getScreenHeightThreshold() {
+    return SCREEN_HEIGHT_THRESHOLD;
 }
-
-
-function get_icp_config() {
-	let url = 'icp';
-	let post = {'query': 'icp'};
-	return ajax_sync(url, post);
+// ====================== 工具纯函数 ======================
+export function isMobileSize() {
+    return window.innerWidth < BREAKPOINT_MD;
 }
-
-
-function get_size_config(screen) {
-	let url = `setting?r=${random()}`;
-	let post = {"func": "get", 'query': 'size'};
-	let data = ajax_sync(url, post);
-
-	const device = is_mobile() ? 'mb' : 'pc';
-	const frame_width_setting = data['frame'];
-	const chart_height_setting = data['chart'];
-	const quote_width_setting = data['quote'];
-	const frame_width_settings = frame_width_setting[screen === "full" ? 'full' : 'norm'][device];
-	const chart_height_settings = chart_height_setting[screen === "full" ? 'full' : 'norm'][device];
-	frame_width_setting_scale = parseFloat(frame_width_settings['scale']);
-	frame_width_setting_min = parseInt(frame_width_settings['min']);
-	frame_width_setting_max = parseInt(frame_width_settings['max']);
-
-	chart_height_setting_scale = parseFloat(chart_height_settings['scale']);
-	chart_height_setting_min = parseInt(chart_height_settings['min']);
-	chart_height_setting_max = parseInt(chart_height_settings['max']);
-
-	quote_width_setting_min = parseFloat(quote_width_setting[device]['min']) * 100;
-	quote_width_setting_max = parseFloat(quote_width_setting[device]['max']) * 100;
-	quote_width_setting_gap = quote_width_setting_max - quote_width_setting_min;
+export function debounceLayout(cb, delay) {
+    clearTimeout(layoutResizeTimer);
+    layoutResizeTimer = setTimeout(cb, delay);
 }
-
-
-function set_frame_size() {
-	let body_width = window.innerWidth;
-	let calc_frame_width = Math.round(body_width * frame_width_setting_scale);
-	if (calc_frame_width > frame_width_setting_max){
-		frame_width = frame_width_setting_max;
-	} else if (calc_frame_width < frame_width_setting_min){
-		if (body_width > frame_width_setting_min){
-			frame_width = frame_width_setting_min;
-		} else {
-			frame_width = body_width;
-		}
-	} else {
-		frame_width = calc_frame_width;
-	}
-	frame_left = Math.round((body_width - frame_width) / 2);
-	frame_height = window.innerHeight;
-
-	doc.style.setProperty("--frame-width", frame_width + "px");
-	doc.style.setProperty("--frame-height", frame_height + "px");
-	doc.style.setProperty("--frame-left", frame_left + "px");
+function pathMatchRule(path, rule) {
+    return rule.prefixes.some((prefix) => path.startsWith(prefix));
 }
-
-
-function set_local_storage() {
-	let setting = frame_width_setting_scale.toString() + ','
-				+ frame_width_setting_min.toString() + ','
-				+ frame_width_setting_max.toString() + ','
-		 		+ chart_height_setting_scale.toString() + ','
-				+ chart_height_setting_min.toString() + ','
-				+ chart_height_setting_max.toString() + ','
-				+ quote_width_setting_min.toString() + ','
-				+ quote_width_setting_max.toString() + ','
-				+ quote_width_setting_gap.toString() + ','
-				+ frame_width.toString() + ','
-				+ frame_height.toString() + ','
-				+ frame_left.toString();
-	localStorage.setItem("size", setting);
+function clearAllTimer() {
+    clearTimeout(layoutResizeTimer);
+    layoutResizeTimer = null;
 }
-
-
-function get_local_storage() {
-	let settings = localStorage.getItem("size").split(',')
-
-    frame_width_setting_scale = parseFloat(settings[0]);
-    frame_width_setting_min = parseInt(settings[1]);
-    frame_width_setting_max = parseInt(settings[2]);
-
-    chart_height_setting_scale = parseFloat(settings[3]);
-    chart_height_setting_min = parseInt(settings[4]);
-    chart_height_setting_max = parseInt(settings[5]);
-
-    quote_width_setting_min = parseFloat(settings[6]);
-    quote_width_setting_max = parseFloat(settings[7]);
-    quote_width_setting_gap = parseFloat(settings[8]);
-
-	frame_width = parseInt(settings[9]);
-	frame_left = parseInt(settings[10]);
-	frame_height = parseInt(settings[11]);
-}
-
-
-// 同步 AJAX 函数
-function ajax_sync(url, post) {
-	let get;
-
-	$.ajax({
-		cache: false,
-		type: "POST",
-		url: `/${url}?r=${random()}`,
-		data: post,
-		// dataType: "json",
-		async: false,
-		beforeSend: function(xhr){
-			xhr.setRequestHeader("X-CSRFToken", csrf_token);
-		},
-		success: function(data) {
-			get = data;
-		},
-		error: function () {
-			get = null;
-		}
-	});
-
-	return get;
-}
-
-
-// 异步 AJAX 函数，返回 Promise 对象
-function ajax_async(url, post) {
-    // 返回 Promise，用 resolve
-    return new Promise((resolve) => {
-        $.ajax({
-            cache: false,
-            type: "POST",
-            url: `/${url}?r=${random()}`, // 假设 random() 是已定义的随机数函数
-            data: post,
-            // dataType: "json",
-			timeout: 10000, // 10s超时，避免一直等
-            async: true, // 显式声明异步
-            beforeSend: function(xhr) {
-                xhr.setRequestHeader("X-CSRFToken", csrf_token); // 假设 csrf_token 已定义
-            },
-            success: function(data) {
-                // 成功时把结果传给 resolve
-                resolve(data);
-            },
-            error: function() {
-                resolve(null);
-            }
-        });
+// ====================== 导航下拉菜单 ======================
+function bindDesktopSubMenu(items, signal) {
+    items.forEach((item) => {
+        item.addEventListener('mouseenter', () => item.classList.add('show'), { signal });
+        item.addEventListener('mouseleave', () => item.classList.remove('show'), { signal });
     });
 }
-
-
-function date_convert(timestamp) {
-	let date = new Date(timestamp);
-    let year = date.getFullYear();
-    let month = ('0' + (date.getMonth() + 1)).slice(-2);
-    let day = ('0' + date.getDate()).slice(-2);
-    return year + '-' + month + '-' + day;
+function bindMobileSubMenu(items, signal) {
+    items.forEach((item) => {
+        const toggle = item.querySelector('.dropdown-toggle');
+        if (!toggle) return;
+        toggle.addEventListener(
+            'click',
+            (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                item.classList.toggle('show');
+            },
+            { signal }
+        );
+    });
 }
-
-
-// 将日期格式统一为YYYY-MM-DD格式
-function format_date(date) {
-    // 定义 YYYY-MM-DD 格式的正则表达式
-    const date_regex = /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/;
-    
-    // 校验格式是否完全匹配
-    if (typeof date !== 'string' || !date_regex.test(date)) {
-        return null;
+function bindClearSubmenuOnDropdownClose(signal) {
+    const focusDrop = document.getElementById('focusDropdown');
+    const reviewDrop = document.getElementById('reviewDropdown');
+    const clearAllSub = () => {
+        document.querySelectorAll('.dropdown-submenu.show').forEach((el) => el.classList.remove('show'));
+    };
+    focusDrop?.addEventListener('hide.bs.dropdown', clearAllSub, { signal });
+    reviewDrop?.addEventListener('hide.bs.dropdown', clearAllSub, { signal });
+}
+// ====================== 初始化子菜单交互 ======================
+function initNavSubMenu(signal) {
+    const subItems = document.querySelectorAll('.dropdown-submenu');
+    if (isMobileSize()) {
+        bindMobileSubMenu(subItems, signal);
+        bindClearSubmenuOnDropdownClose(signal);
+    } else {
+        bindDesktopSubMenu(subItems, signal);
+        bindClearSubmenuOnDropdownClose(signal);
     }
-    // 校验日期合法（排除 2024-02-30、2024-04-31 等非法日期）
-    const [year, month, day] = date.split('-').map(Number);
-    const check_date = new Date(year, month - 1, day);
-    
-    // 验证构造的日期和输入的年/月/日完全一致
-    const is_valid = 
-        check_date.getFullYear() === year &&
-        check_date.getMonth() + 1 === month &&
-        check_date.getDate() === day;
-
-    if (!is_valid) {
-        return null;
+}
+// ====================== 全局点击收拢菜单 ======================
+function closeAllSubMenus(target) {
+    const subs = document.querySelectorAll('.dropdown-submenu.show');
+    let clickInside = false;
+    subs.forEach((el) => {
+        if (el.contains(target)) clickInside = true;
+    });
+    if (!clickInside) subs.forEach((el) => el.classList.remove('show'));
+}
+function closeTopLevelDropdown(target) {
+    const toggles = [document.getElementById('focusDropdown'), document.getElementById('reviewDropdown')];
+    toggles.forEach((toggle) => {
+        if (!toggle) return;
+        const menu = toggle.nextElementSibling;
+        if (!menu) return;
+        const isClickInside = toggle.contains(target) || menu.contains(target);
+        if (menu.classList.contains('show') && !isClickInside) {
+            bootstrap.Dropdown.getInstance(toggle)?.hide();
+        }
+    });
+}
+function closeMobileNavPanel(target) {
+    const navPanel = document.getElementById('navbarNav');
+    const clickInNav = nav.contains(target);
+    if (!clickInNav && navPanel?.classList.contains('show')) {
+        bootstrap.Collapse.getInstance(navPanel)?.hide();
     }
-
-    return date;
 }
-
-
-function value_with_deci(value, deci) {
-	if (value) {
-		value = Number(value).toFixed(deci)
-	}
-	return value
+function bindGlobalClickCollapseMenu(e) {
+    if (!isMobileSize()) return;
+    const target = e.composedPath()[0];
+    closeAllSubMenus(target);
+    closeTopLevelDropdown(target);
+    closeMobileNavPanel(target);
 }
-
-
-function random() {
-    return new Date().getTime().toString();
+// ====================== 导航路由高亮 ======================
+function setActiveNavLink() {
+    const currentPath = window.location.pathname;
+    document.querySelectorAll('#mainNav .nav-link.active').forEach((el) => el.classList.remove('active'));
+    for (const rule of NAV_ACTIVE_RULES) {
+        if (pathMatchRule(currentPath, rule)) {
+            const dom = document.querySelector(rule.selector);
+            dom?.classList.add('active');
+            break;
+        }
+    }
+}
+// ====================== 页面布局控制 ======================
+function updatePageLayoutByNavState() {
+    if (!gapEl || !pageContent) return;
+    const navHidden = isMainNavHidden();
+    if (navHidden) {
+        gapEl.style.display = 'none';
+        pageContent.style.paddingTop = '0px';
+    } else {
+        gapEl.style.display = 'block';
+        pageContent.style.paddingTop = `calc(var(--nav-height) + var(--gap-height))`;
+    }
+}
+export function toggleNavVisible() {
+    if (!nav) return;
+    // true = 强制锁定导航永久显示，禁用自动隐藏逻辑
+    // false = 取消锁定，交给滚动自动控制显隐，不会主动隐藏导航
+    if (NAV_LOCKED) {
+        nav.classList.remove('hidden');
+        isNavVisible = true;
+        disableNavAutoHide = true;
+        // 布局更新，锁定导航时同步调整页面内边距与间隙显隐
+        updatePageLayoutByNavState(); 
+    } else {
+        disableNavAutoHide = false;
+        // 取消锁定后，同步 isNavVisible 为当前导航实际可见状态（从 DOM 读取）
+        isNavVisible = !nav.classList.contains('hidden');
+        // 仅更新布局，不操作 nav hidden 类
+        updatePageLayoutByNavState();
+    }
+    // 触发自定义事件，通知其他模块导航状态已变更
+    window.dispatchEvent(new CustomEvent('navVisibilityChanged'));
+}
+function initBasePageLayout() {
+    if (!nav || !pageContent || !gapEl) return;
+    // 初始化强制显示导航
+    nav.classList.remove('hidden');
+    isNavVisible = true;
+    disableNavAutoHide = false;
+    updatePageLayoutByNavState();
+}
+// ====================== 滚动节流 ======================
+function handleWindowScrollFrame() {
+    const scrollY = window.scrollY;
+    // 初始化阶段：只记录位置，不改变导航状态
+    if (isInitializing) {
+        lastScrollY = scrollY;
+        frameTicking = false;
+        return;
+    }
+    const threshold = 2;
+    const viewHeight = window.innerHeight;
+    const totalScrollHeight = document.documentElement.scrollHeight;
+    const isPageBottom = viewHeight + scrollY >= totalScrollHeight - 5;
+    const isPageOverflow = totalScrollHeight > viewHeight;
+    // 底部回弹抑制
+    if (isPageBottom) {
+        lastScrollY = scrollY;
+        frameTicking = false;
+        return;
+    }
+    // 下滑（滚动变小）→ 恢复导航
+    if (scrollY < lastScrollY - threshold) {
+        if (!isNavVisible) {
+            nav.classList.remove('hidden');
+            isNavVisible = true;
+            updatePageLayoutByNavState();
+            // 确保所有监听导航状态的模块都能收到通知同步更新
+            window.dispatchEvent(new CustomEvent('navVisibilityChanged'));
+        }
+        lastScrollY = scrollY;
+        frameTicking = false;
+        return;
+    }
+    // 上滑（滚动变大）→ 检查是否允许隐藏
+    if (viewHeight >= SCREEN_HEIGHT_THRESHOLD) {
+        lastScrollY = scrollY;
+        frameTicking = false;
+        return;
+    }
+    if (!isPageOverflow) {
+        lastScrollY = scrollY;
+        frameTicking = false;
+        return;
+    }
+    if (disableNavAutoHide) {
+        lastScrollY = scrollY;
+        frameTicking = false;
+        return;
+    }
+    if (scrollY <= lastScrollY + threshold || scrollY <= navHeight || !isNavVisible) {
+        lastScrollY = scrollY;
+        frameTicking = false;
+        return;
+    }
+    // 执行隐藏
+    nav.classList.add('hidden');
+    isNavVisible = false;
+    updatePageLayoutByNavState();
+    // 确保所有监听导航状态的模块都能收到通知同步更新
+    window.dispatchEvent(new CustomEvent('navVisibilityChanged'));
+    lastScrollY = scrollY;
+    frameTicking = false;
+}
+export function handleWindowScroll() {
+    if (!frameTicking) {
+        window.requestAnimationFrame(handleWindowScrollFrame);
+        frameTicking = true;
+    }
+}
+// ====================== 全局初始化 ======================
+export function baseInit() {
+    // 重复初始化时先销毁旧实例，避免事件重复绑定与内存泄漏
+    if (isBaseInited && baseGlobalAbort) {
+        baseInit.destroy();
+    }
+    const globalAbort = new AbortController();
+    baseGlobalAbort = globalAbort;
+    const signal = globalAbort.signal;
+    
+    nav = document.getElementById('mainNav');
+    pageContent = document.getElementById('pageContent');
+    gapEl = document.getElementById('gap');
+    // 开启初始化保护
+    isInitializing = true;
+    subMenuAbortController = new AbortController();
+    initNavSubMenu(subMenuAbortController.signal);
+    lastIsMobile = isMobileSize();
+    setActiveNavLink();
+    // 强制显示导航
+    initBasePageLayout();
+    // 记录当前滚动位置
+    lastScrollY = window.scrollY;
+    // 计算初始导航高度
+    navHeight = nav?.offsetHeight ?? 0;
+    // 显示/隐藏导航控制
+    toggleNavVisible()
+    setTimeout(() => {
+        isInitializing = false;
+        // 可额外同步一次，确保导航状态正确
+        handleWindowScroll();
+    }, INIT_PROTECT_DELAY);
+    document.addEventListener('click', bindGlobalClickCollapseMenu, { signal });
+    window.addEventListener(
+        'resize',
+        () => {
+            debounceLayout(() => {
+                const tempHidden = isMainNavHidden();
+                if (tempHidden) nav.classList.remove('hidden');
+                navHeight = nav.offsetHeight;
+                if (tempHidden) nav.classList.add('hidden');
+                updatePageLayoutByNavState();
+                handleWindowScroll();
+                // 导航尺寸变化也可能影响固定表头，触发事件
+                window.dispatchEvent(new CustomEvent('navVisibilityChanged'));
+                // 检测是否跨越移动端断点，跨越则重新绑定子菜单交互
+                const currentIsMobile = isMobileSize();
+                if (currentIsMobile !== lastIsMobile) {
+                    // 销毁旧的事件监听
+                    subMenuAbortController.abort();
+                    // 创建新的信号量，重新绑定对应模式的子菜单事件
+                    subMenuAbortController = new AbortController();
+                    initNavSubMenu(subMenuAbortController.signal);
+                    lastIsMobile = currentIsMobile;
+                }
+            }, RESIZE_DELAY_LAYOUT);
+        },
+        { passive: true, signal }
+    );
+    window.addEventListener('scroll', handleWindowScroll, { passive: true, signal });
+    baseInit.destroy = () => {
+        globalAbort.abort();
+        // 销毁子菜单专属事件监听
+        subMenuAbortController?.abort();
+        clearAllTimer();
+        // 重置初始化状态与引用
+        isBaseInited = false;
+        baseGlobalAbort = null;
+    };
+    isBaseInited = true;
 }

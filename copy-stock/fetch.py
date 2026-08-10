@@ -22,7 +22,7 @@ from stock import func
 from website import base
 
 
-MIN_INTERVAL = 1.0                               # 最小请求间隔（秒）
+MIN_INTERVAL = 2.0                               # 最小请求间隔（秒）
 REDIS_LAST_REQUEST = "stock_last_request_time"   # 最后请求时间戳
 REDIS_REQUEST_TIMING = "stock_request_timing"    # 请求状态（'0'=空闲，'1'=请求中）
 

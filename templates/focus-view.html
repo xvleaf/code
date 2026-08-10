@@ -1,187 +1,185 @@
 {% extends "base-view.html" %}
+{% block title %}{{ name }} {{ code }} - 关注详情{% endblock %}
+{% load static %}
 
-{% block title %}
-    <title>{{ data.name }} - {{ data.code }}</title>
-{% endblock %}
-
-{% block refer %}
-  {% load static %}
-  <link rel="stylesheet" type="text/css" href="{% static 'base/lib/tinymce/skins/ui/oxide/skin.min.css' %}" id="mce-u0">
-
-  <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
-  <script src="{% static 'base/lib/tinymce/tinymce.min.js' %}"></script>
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'stock/css/view.css' %}">
 {% endblock %}
 
 {% block content %}
-
-    <div id="page-chart" class="page-chart"></div>
-
-    {% if screen != 'full' %}
-      <div id="page-content" class="page-content">
-
-        {% with class_now="form-control" %}
-        {% with class_past="form-control color-dimgrey" %}
-
-        <div class="col-sm-12">
-          <div class="row">
-            <div class="col-md-6 col-sm-6">
-              <div class="mb-2">
-                <label for="date" class="form-label">{% if data.event == 'U' %}更新日期{% else %}关注日期{% endif %}</label>
-                <input type="text" id="date" value="{{ data.date | date:'Y-m-d'}}" readonly
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
+<div class="chart-page" id="chartPage">
+    {# 分时视图 #}
+    {% if view == 'trend' %}
+    <div class="chart-trend-wrap">
+        {# 图形容器 #}
+        <div class="chart-trend-canvas">
+            {# 占位层 #}
+            <div class="chart-placeholder" id="trendPlaceholder">
+                <div class="chart-placeholder-text">图表加载中...</div>
             </div>
-            <div class="col-md-6 col-sm-6">
-              <form id="main-form" onsubmit="return false;">
-                <div class="mb-2">
-                  <label for="priority" class="form-label">关注顺序</label>
-                  <input id="priority" type="text" value="{{ data.priority }}" placeholder="关注顺序"
-                        {% if pilot_index == 0 or pilot_index == -1 %}
-                            {% if data.priority != 999 %}
-                                class="{{ class_now }} color-purple" onchange="priority_change('{{ data.market }}.{{ data.code }}')"
-                            {% else %}
-                                class="{{ class_now }}" readonly
-                            {% endif %}
-                        {% else %}
-                            class="{{ class_past }}" readonly
-                        {% endif %}
-                  >
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-        <div class="col-sm-12">
-          <div class="row">
-            <div class="col-md-6 col-sm-6">
-              <div class="mb-2">
-                <label for="under" class="form-label">证券市场</label>
-                <input type="text" id="under"
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                    value="{% if data.under == 'SH' %}上海{% elif data.under == 'SZ' %}深圳{% else %}北京{% endif %}"
-                    readonly>
-              </div>
-            </div>
-            <div class="col-md-6 col-sm-6">
-              <div class="mb-2">
-                <label for="type" class="form-label">证券类型</label>
-                <input type="text" id="type"
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                    value="{{ data.get_type_display }}"
-                    readonly>
-              </div>
-            </div>
-          </div>
+            <div id="chartContainer" class="chart-container"></div>
         </div>
 
-        <div class="col-sm-12">
-          <div class="row">
-            <div class="col-md-6 col-sm-6">
-              <div class="mb-2">
-                <label for="intent" class="form-label">交易方向</label>
-                <input id="intent" value="{{ data.get_intent_display }}" type="text" readonly
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
-            </div>
-            <div class="col-md-6 col-sm-6">
-              <div class="mb-2">
-                <label for="settle" class="form-label">交易类型</label>
-                <input id="settle" type="text" readonly
-                    {% if data.settle == '0' %} value="T+0" {% else %} value="T+1" {% endif %}
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
-            </div>
-          </div>
+        <div class="chart-param">
+                <button class="chart-icon-btn" id="btnExit"></button>
+                <button class="chart-icon-btn" id="btnEdit"></button>
+                <button class="chart-icon-btn" id="btnDeal"></button>
+                <button class="chart-icon-btn" id="btnFullscreen"></button>
+                <button class="chart-icon-btn"><i class="fas fa-chevron-down"></i></button>
+                <button class="chart-icon-btn"><i class="fas fa-xmark"></i></button>
         </div>
+    </div>
 
-        <div class="col-sm-12">
-          <div class="row">
-            <div class="col-md-6 col-sm-6">
-              <div class="mb-2">
-                <label for="price" class="form-label">计划填报</label>
-                <input id="price" type="text" value="{{ data.price|floatformat:deci }}" placeholder="计划交易价格" readonly
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
-              <div class="mb-2">
-                <label for="target" class="form-label">目标价格</label>
-                <input id="target" type="text" value="{{ data.target|floatformat:deci }}" placeholder="计划目标价格" readonly
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
-              <div class="mb-2">
-                <label for="stop" class="form-label">止损价格</label>
-                <input id="stop" type="text" value="{{ data.stop|floatformat:deci }}" placeholder="计划止损价格" readonly
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
-            </div>
-
-            <div class="col-md-6 col-sm-6">
-              <div class="mb-2">
-                <label for="qty" class="form-label">计划数量</label>
-                <input id="qty" type="text" value="{{ data.qty|floatformat:0 }}" placeholder="计划交易数量" readonly
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
-              <div class="mb-2">
-                <label for="permit" class="form-label">允许数量</label>
-                <input id="permit" type="text" value="{% if aim == 'review' %}-{% else %}{{ permit|floatformat:0 }}{% endif %}" placeholder="允许交易数量" readonly
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
-              <div class="mb-2">
-                <label for="chance" class="form-label">成功几率</label>
-                <input id="chance" type="text" value="{{ data.chance|floatformat:0 }}" placeholder="计划成功几率" readonly
-                    class="{% if pilot_index == 0 or pilot_index == -1 %}{{ class_now }}{% else %}{{ class_past }}{% endif %}"
-                >
-              </div>
-            </div>
-          </div>
+    {# K线视图 #}
+    {% else %}
+    <div class="chart-kline-wrap">
+        {# 占位层 #}
+        <div class="chart-placeholder" id="klinePlaceholder">
+            <div class="chart-placeholder-text">图表加载中...</div>
         </div>
+        <div id="chartContainer" class="chart-container"></div>
+    </div>
 
-        {% endwith %}
-        {% endwith %}
+    {# K线指标栏 #}
+    <div class="chart-kline-metrics">
+        <table>
+            <tr>
+                <td><span id="klineClose" class="metric-item">-</span>
+                    <span class="metric-split">,</span>
+                    <span id="klinePercent" class="metric-item">-</span>
+                    <span class="metric-split">,</span>
+                    <span id="klineMa" class="metric-item metric-orange">-</span>
+                    <span class="metric-split">,</span>
+                    <span id="klineMv" class="metric-item metric-black">-</span>
+                </td>
+            </tr>
+            <tr>
+                <td><span id="klineTp" class="metric-item metric-grey">-</span>
+                    <span class="metric-split">,</span>
+                    <span id="klineUp" class="metric-item metric-blue">-</span>
+                    <span class="metric-split">,</span>
+                    <span id="klineAv" class="metric-item metric-black">-</span>
+                    <span class="metric-split">,</span>
+                    <span id="klineLw" class="metric-item metric-blue">-</span>
+                    <span class="metric-split">,</span>
+                    <span id="klineFl" class="metric-item metric-grey">-</span>
+                </td>
+            </tr>
+        </table>
+    </div>
 
-      <div id="chart-comments" class="disp-none">
-            <div class="hr-text">
-                <span id="comment-split" class="color-lightgrey">备忘</span>
-            </div>
+    {# K线参数栏 #}
+    <div class="chart-param" id="klineParam">
+        <span class="param-label metric-black">k</span>
+        <div id="kValue" contenteditable="true" class="param-input">-</div>
+        <span class="param-label metric-black">d</span>
+        <div id="dValue" contenteditable="true" class="param-input">-</div>
 
-            <div class="bg-white">
-                <div id="comments-area" class="row">
-                    <form id="comments-form" onsubmit="save_comment('{{ data.market }}.{{ data.code }}', '{{ data.flow }}');">
-                      <label for="comments" class="form-label disp-none">备忘</label>
-
-                      <textarea id="comments">
-                          {% if data.comments != '' and data.comments != null %}
-                              {{ data.comments }}
-                          {% endif %}
-                      </textarea>
-                    </form>
-                </div>
-            </div>
-          </div>
-      </div>
-
-      <div class="page-foot"></div>
-
+        <div class="param-label metric-grey pointer" onclick="toggleRight('{{ market }}.{{ code }}')">
+            <i class="fas fa-repeat"></i>
+        </div>        
+        <div class="param-label metric-grey pointer" onclick="changePeriod('{{ market }}.{{ code }}', 'day')">
+            <i class="fas fa-sun"></i>
+        </div>        
+        <div class="param-label metric-grey pointer" onclick="changePeriod('{{ market }}.{{ code }}', 'week')">
+            <i class="fas fa-star-of-life"></i>
+        </div>        
+        <div class="param-label metric-grey pointer" onclick="changePeriod('{{ market }}.{{ code }}', 'month')">
+            <i class="fas fa-moon"></i>
+        </div>        
+        <div class="param-label metric-grey pointer" onclick="toggleFullscreen('{{ market }}.{{ code }}', '{{ screen }}')">
+            <i class="fas fa-expand"></i>
+        </div>        
+    </div>
     {% endif %}
 
-    <script>
-        page_chart_init("{{ market }}.{{ code }}", "{{ view }}");
-        set_page_scroll();
-        $(function () {
-            init_tinymce();
 
-            // 全屏时，临时存储表单数据，返回时自动填充
-            {% if screen == 'norm' %}
-                refill_temp_form_data();
-            {% endif %}
-        })
-    </script>
+    {# 股票信息 #}
+    <div class="chart-stock-name">
+        <span id="naviIndicator" class="chart-kline-navi"></span>
+        <span class="pointer" onclick="viewModeChange('{{ market }}.{{ code }}', '{{ view }}')">NAME</span>
+        <span class="{% if is_linkable %}pointer{% endif %}"
+              {% if is_linkable %}onclick="jumpToLink('{{ cat }}', '{{ market }}', '{{ code }}')"{% endif %}>CODE</span>
+    </div>
 
+    {# 底部导航栏 #}
+    {% if navi %}
+    <div class="chart-navi-bar">
+            
+        <div class="chart-navi-left">
+            <div class="chart-navi-group">
+                <div class="chart-navi-item {% if navi_prev %}pointer{% else %}is-disabled{% endif %}"
+                    {% if navi_prev %}onclick="naviSwitch('{{ market }}.{{ code }}', 'navi', 'prev')"{% endif %}>
+                    <i class="fas fa-angle-left"></i>
+                </div>
+                {% if show_pilot %}
+                <div class="chart-navi-item {% if pilot_prev %}pointer{% else %}is-disabled{% endif %}"
+                    {% if pilot_prev %}onclick="naviSwitch('{{ market }}.{{ code }}', 'pilot', 'prev')"{% endif %}>
+                    <i class="fas fa-angle-up"></i>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="chart-navi-center">
+            <div class="chart-navi-group">
+                {% if show_tool_bar and screen != 'full' %}
+                <div class="chart-navi-item pointer" onclick="toggleComment()">
+                    <i class="fas fa-comment-alt"></i>
+                </div>
+                {% endif %}
+                <div class="chart-navi-item pointer" onclick="backToList()">
+                    <i class="fas fa-list"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-navi-right">
+            <div class="chart-navi-group">
+                {% if show_pilot %}
+                <div class="chart-navi-item {% if pilot_next %}pointer{% else %}is-disabled{% endif %}"
+                    {% if pilot_next %}onclick="naviSwitch('{{ market }}.{{ code }}', 'pilot', 'next')"{% endif %}>
+                    <i class="fas fa-angle-down"></i>
+                </div>
+                {% endif %}
+                <div class="chart-navi-item {% if navi_next %}pointer{% else %}is-disabled{% endif %}"
+                    {% if navi_next %}onclick="naviSwitch('{{ market }}.{{ code }}', 'navi', 'next')"{% endif %}>
+                    <i class="fas fa-angle-right"></i>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static 'base/js/jquery-3.7.0.min.js' %}"></script>
+    <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
+<script type="module">
+    import { baseInit } from "{% static 'base/js/base.js' %}";
+    import { initChartPage } from "{% static 'stock/js/view.js' %}";
+    document.addEventListener('DOMContentLoaded', () => {
+        baseInit();
+        initChartPage({
+            marketCode: "{{ market }}.{{ code }}",
+            name: "{{ name }}",
+            cat: "{{ cat }}",
+            view: "{{ view }}",
+            screen: "{{ screen }}",
+            interval: {{ interval }},
+            trendAct: {{ trend_act|safe }},
+            navi: {{ navi|lower }},
+            naviIndex: "{{ navi_index }}",
+            naviCount: "{{ navi_count }}",
+            naviPrev: {{ navi_prev|lower }},
+            naviNext: {{ navi_next|lower }},
+            showPilot: {{ show_pilot|lower }},
+            pilotPrev: {{ pilot_prev|lower }},
+            pilotNext: {{ pilot_next|lower }},
+            site: "focus/view"
+        });
+    });
+</script>
 {% endblock %}
