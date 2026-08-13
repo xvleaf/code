@@ -592,11 +592,11 @@
                   <div class="row">
                     <div class="col-md-6 col-sm-6">
                       <div class="mb-2">
-                        <label for="kline-period" class="form-label color-lightblue">默认周期</label>
-                        <select id="kline-period" class="form-select" onchange="setting_config_changed('kline', 'period')">
-                          <option value="day" {% if data.kline.period == 'day' %} selected {% endif %}>日线</option>
-                          <option value="week" {% if data.kline.period == 'week' %} selected {% endif %}>周线</option>
-                          <option value="month" {% if data.kline.period == 'month' %} selected {% endif %}>月线</option>
+                        <label for="kline-freq" class="form-label color-lightblue">默认周期</label>
+                        <select id="kline-freq" class="form-select" onchange="setting_config_changed('kline', 'freq')">
+                          <option value="day" {% if data.kline.freq == 'D' %} selected {% endif %}>日线</option>
+                          <option value="week" {% if data.kline.freq == 'W' %} selected {% endif %}>周线</option>
+                          <option value="month" {% if data.kline.freq == 'M' %} selected {% endif %}>月线</option>
                         </select>
                       </div>
                     </div>
@@ -613,8 +613,8 @@
                       <label class="form-label pad-btm-1 color-lightblue">EMA参数</label>
 
                       <div class="disp-flex">
-                        <label for="ema-period" class="form-label"></label>
-                        <select id="ema-period" class="filter-select " onchange="get_setting_config('kline', 'ema-period')">
+                        <label for="ema-freq" class="form-label"></label>
+                        <select id="ema-freq" class="filter-select " onchange="get_setting_config('kline', 'ema-freq')">
                           <option value="day" selected>日线</option>
                           <option value="week">周线</option>
                           <option value="month">月线</option>
@@ -658,8 +658,8 @@
                       <label class="form-label pad-btm-1 color-lightblue">MA参数</label>
 
                       <div class="disp-flex">
-                        <label for="ma-period" class="form-label"></label>
-                        <select id="ma-period" class="filter-select " onchange="get_setting_config('kline', 'ma-period')">
+                        <label for="ma-freq" class="form-label"></label>
+                        <select id="ma-freq" class="filter-select " onchange="get_setting_config('kline', 'ma-freq')">
                           <option value="day" selected>日线</option>
                           <option value="week">周线</option>
                           <option value="month">月线</option>

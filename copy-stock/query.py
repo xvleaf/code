@@ -179,9 +179,9 @@ def for_quote_trend(tscode, deci):
      # 将 ts 代码转换为 ak 代码
     num, suffix = tscode.split('.')
     akcode = f'{suffix.lower()}{num}'
-    # period 可以取1/5/15/30/60分钟，本函数用于获取分时数据，取1
+    # freq 可以取1/5/15/30/60分钟，本函数用于获取分时数据，取1
     try:
-        trend = ak.stock_zh_a_minute(symbol=akcode, period='1', adjust='qfq')
+        trend = ak.stock_zh_a_minute(symbol=akcode, freq='1', adjust='qfq')
     except Exception:
         return {}
 
@@ -325,9 +325,9 @@ def get_quote_data(tscode, deci):
         # 将 ts 代码转换为 ak 代码
         num, suffix = code.split('.')
         code = f'{suffix.lower()}{num}'
-        # period 可以取1/5/15/30/60分钟，本函数用于获取分时数据，取1
+        # freq 可以取1/5/15/30/60分钟，本函数用于获取分时数据，取1
         try:
-            trend = ak.stock_zh_a_minute(symbol=code, period='1', adjust='qfq')
+            trend = ak.stock_zh_a_minute(symbol=code, freq='1', adjust='qfq')
         except Exception:
             return []
 

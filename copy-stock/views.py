@@ -2428,7 +2428,7 @@ def chart_view(request):
         # 修改缓存的 view 状态
         func.get_chart_view(session_key, request_site, request_value)
 
-    # elif request_func == 'k' or request_func == 'd' or request_func == 'right' or request_func == 'period'
+    # elif request_func == 'k' or request_func == 'd' or request_func == 'right' or request_func == 'freq'
     else:
         # 设置 kline 参数
         func.get_kline_param(session_key, request_func, request_value)
@@ -2490,7 +2490,7 @@ def chart_data(request):
         keys_basic = [
             # tp 及 fl 用于第一时间定位纵轴坐标
             'ohlc', 'volume', 'tp', 'fl', 'k', 'd', 'deci',
-            'show_std', 'show_max', 'show_min', 'deadline', 'period', 'right'
+            'show_std', 'show_max', 'show_min', 'deadline', 'freq', 'right'
         ]
         keys_extra = [
             'deal', 'up', 'av', 'lw', 'ma', 'mv'
@@ -2507,7 +2507,7 @@ def chart_data(request):
             kline_data = fetch.Kline.view(
                 market_with_code,
                 kline_param['right'],
-                kline_param['period'],
+                kline_param['freq],
                 int(kline_param['k']),
                 int(kline_param['d']),
                 width,

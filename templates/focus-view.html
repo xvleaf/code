@@ -7,7 +7,7 @@
 {% endblock %}
 
 {% block content %}
-<div class="chart-page" id="chartPage">
+<div class="chart-page {% if not navi %}no-navi{% endif %}" id="chartPage">
     {# 分时视图 #}
     {% if view == 'trend' %}
     <div class="chart-trend-wrap">
@@ -78,13 +78,13 @@
         <div class="param-label metric-grey pointer" onclick="toggleRight('{{ market }}.{{ code }}')">
             <i class="fas fa-repeat"></i>
         </div>        
-        <div class="param-label metric-grey pointer" onclick="changePeriod('{{ market }}.{{ code }}', 'day')">
+        <div class="param-label metric-grey pointer" onclick="changeFreq('{{ market }}.{{ code }}', 'day')">
             <i class="fas fa-sun"></i>
         </div>        
-        <div class="param-label metric-grey pointer" onclick="changePeriod('{{ market }}.{{ code }}', 'week')">
+        <div class="param-label metric-grey pointer" onclick="changeFreq('{{ market }}.{{ code }}', 'week')">
             <i class="fas fa-star-of-life"></i>
         </div>        
-        <div class="param-label metric-grey pointer" onclick="changePeriod('{{ market }}.{{ code }}', 'month')">
+        <div class="param-label metric-grey pointer" onclick="changeFreq('{{ market }}.{{ code }}', 'month')">
             <i class="fas fa-moon"></i>
         </div>        
         <div class="param-label metric-grey pointer" onclick="toggleFullscreen('{{ market }}.{{ code }}', '{{ screen }}')">
@@ -92,7 +92,6 @@
         </div>        
     </div>
     {% endif %}
-
 
     {# 股票信息 #}
     <div class="chart-stock-name">
@@ -159,7 +158,7 @@
     <script src="{% static 'base/lib/Highcharts/js/highstock.js' %}"></script>
 <script type="module">
     import { baseInit } from "{% static 'base/js/base.js' %}";
-    import { initChartPage } from "{% static 'stock/js/view.js' %}";
+    import { initChartPage } from "{% static 'stock/js/func.js' %}";
     document.addEventListener('DOMContentLoaded', () => {
         baseInit();
         initChartPage({

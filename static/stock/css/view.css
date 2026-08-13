@@ -1,4 +1,9 @@
 /* ========== 根容器 ========== */
+:root {
+    /* 底部导航栏默认高度 */
+    --navi-bar-height: 20px;
+}
+
 .chart-page {
     position: relative;
     width: 100%;
@@ -6,6 +11,11 @@
     border-radius: 4px;
     background: var(--color-bg-white);
     box-sizing: border-box;
+}
+
+/* 当隐藏底部导航栏时，将变量归零 */
+.chart-page.no-navi {
+    --navi-bar-height: 0px;
 }
 
 .chart-container {
@@ -36,10 +46,12 @@
 
 /* ========== 分时视图 ========== */
 .chart-trend-wrap {
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    /* 核心修改：高度减去导航栏高度，底部正好对齐导航栏顶部 */
-    height: calc(100% - 45px);
+    /* 高度减去导航栏高度，再减去chart-navi-bar的高度 */
+    height: calc(100% - var(--navi-bar-height));
     box-sizing: border-box;
 }
 
@@ -111,7 +123,7 @@
 
 /* 大盘行情文字 */
 .chart-market-text {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     margin-left: 8px;
     color: var(--color-text-primary);
 }
@@ -149,8 +161,8 @@
     top: 0;
     left: 0;
     width: 100%;
-    /* 高度减去导航栏高度，底部正好对齐导航栏顶部 */
-    height: calc(100% - 20px);
+    /* 高度减去导航栏高度，再减去chart-navi-bar的高度 */
+    height: calc(100% - var(--navi-bar-height));
     box-sizing: border-box;
 }
 
@@ -272,7 +284,7 @@
     /* 核心修改：固定在底部，移除动态top计算 */
     bottom: 0;
     width: 100%;
-    height: 20px;
+    height: var(--navi-bar-height, 20px); 
     z-index: 3;
     display: flex;
     justify-content: space-between;

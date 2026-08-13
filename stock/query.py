@@ -119,7 +119,7 @@ def get_kline_data(asset, tscode, start, end, freq='D', adj=None):
 
     # 未复权日线也可调用daily接口
     # 周线/月线也可调用stk_week_month及stk_week_month_adj接口
-    # 也可以采用自定义函数 kline_periods_from_daily(kline, freq)，注意该函数不会出现数据缺失的情况，因此下面中的 iloc[1:] 不需要
+    # 也可以采用自定义函数 kline_freq_from_daily(kline, freq)，注意该函数不会出现数据缺失的情况，因此下面中的 iloc[1:] 不需要
     if asset == 'E':
         kline = ts.pro_bar(asset=asset, ts_code=tscode, freq=freq, adj=adj, start_date=start, end_date=end, factors=['tor', 'vr'], fields=fields)        
     
@@ -153,9 +153,9 @@ def for_trend_data(tscode, deci):
      # 将 ts 代码转换为 ak 代码
     num, suffix = tscode.split('.')
     akcode = f'{suffix.lower()}{num}'
-    # period 可以取1/5/15/30/60分钟，本函数用于获取分时数据，取1
+    # freq 可以取1/5/15/30/60分钟，本函数用于获取分时数据，取1
     try:
-        trend = ak.stock_zh_a_minute(symbol=akcode, period='1', adjust='qfq')
+        trend = ak.stock_zh_a_minute(symbol=akcode, freq='1', adjust='qfq')
     except Exception:
         return {}
 
@@ -299,77 +299,6 @@ def get_last_price(tscode, deci):
     return quote
 
 
-def kline_periods_from_daily(df, freq):
-    """
-    根据日线聚合为周线或月线
-    :Param df : DataFrame 日线数据，索引必须为 DatetimeIndex（由 'trade_date' 设置）
-    :freq : str 'W' 周线（按周五收盘），'M' 月线
-    :Returns: pd.DataFrame
-    """
-    # 转换 trade_date 为 datetime
-    df['trade_date'] = pd.to_datetime(df['trade_date'])
-    df = df.set_index('trade_date')
-
-    # 确保索引已排序（对于 resample 很重要）
-    df = df.sort_index()
-
-    # 添加一列保存真实的日期（索引值）
-    df['real_date'] = df.index
-
-    # 定义聚合规则
-    agg_dict = {
-        # 取该周期最后一个交易日期
-        'real_date': 'last',
-        'open': 'first',
-        'high': 'max',
-        'low': 'min',
-        'close': 'last',
-        'vol': 'sum',
-        'amount': 'sum'
-    }
-
-    # 执行重采样
-    if freq == 'W':
-        # 按周五结束
-        resampled = df.resample('W-FRI').agg(agg_dict)
-    # elif freq == 'M':
-    else:
-        # 按自然月末
-        resampled = df.resample('ME').agg(agg_dict)  
-
-    # 删除空行（完全没有交易数据的周期）
-    resampled = resampled.dropna(how='all')
-
-    # 将 real_date 设为新索引（覆盖原来的边界日期）
-    resampled.set_index('real_date', inplace=True)
-    # 删除原来的索引名称（原索引列已被替换）
-    resampled.index.name = None
-
-    # 计算 pre_close, change, pct_chg
-    resampled['pre_close'] = resampled['close'].shift(1)
-    resampled['change'] = resampled['close'] - resampled['pre_close']
-    # 避免除零，若 pre_close 为 0 或 NaN，则 pct_chg 为 NaN
-    resampled['pct_chg'] = (resampled['change'] / resampled['pre_close']) * 100
-    resampled['pct_chg'] = resampled['pct_chg'].round(2)   # 保留两位小数
-
-    # 重置索引，将日期变为列 trade_date
-    resampled = resampled.reset_index()
-    resampled.rename(columns={'index': 'trade_date'}, inplace=True)
-
-    # 添加 ts_code（如果原始数据有该列）
-    resampled['ts_code'] = df['ts_code'].iloc[0]
-
-    # 重置索引，将日期变为普通列
-    resampled = resampled.reset_index()
-
-    # 调整列顺序，确保与标准字段一致
-    final_cols = ['ts_code', 'trade_date', 'open', 'close', 'high', 'low',
-                  'pre_close', 'change', 'pct_chg', 'vol', 'amount']                  
-    resampled = resampled[final_cols]
-    
-    return resampled
-
-
 # ========================= 以下代码备用 =========================
 # *****fund_basic接口获得的基金列表，与get_kline_data不对应，get_kline_data能得到ETF基金的K线*****
 # *****etf_basic接口无权限调用（需要5000积分以上）*****
@@ -405,3 +334,6 @@ def get_bond_basic():
     fields = 'ts_code,bond_short_name,cb_type,stk_code,stk_short_name,exchange'
     data = pro.cb_basic(fields=fields)
     return data
+
+
+

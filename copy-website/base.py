@@ -122,7 +122,7 @@ def get_setting(item: str = None, key: str = None, values: dict = None):
         'frame': {'screen': 'norm', 'device': 'mb'},
         'chart': {'screen': 'norm', 'device': 'mb'},
         'quote': {'device': 'mb'},
-        'kline': {'ema-period': 'day', 'ma-period': 'day'},
+        'kline': {'ema-freq': 'day', 'ma-freq': 'day'},
         'fee': {'market': 'SH', 'type': 'S', 'intent': 'L'},
     }
 
@@ -149,10 +149,10 @@ def get_setting(item: str = None, key: str = None, values: dict = None):
             if each.item == 'kline':
                 ema = config.pop('ema')
                 ma = config.pop('ma')
-                period_ema = select_key['kline']['ema-period']
-                period_ma = select_key['kline']['ma-period']
-                config['ema'] = {'k': ema[period_ema]['k'], 'd': ema[period_ema]['d']}
-                config['ma'] = {'a': ma[period_ma]['a'], 'v': ma[period_ma]['v']}
+                freq_ema = select_key['kline']['ema-freq']
+                freq_ma = select_key['kline']['ma-freq']
+                config['ema'] = {'k': ema[freq_ema]['k'], 'd': ema[freq_ema]['d']}
+                config['ma'] = {'a': ma[freq_ma]['a'], 'v': ma[freq_ma]['v']}
 
             data[each.item] = config
 

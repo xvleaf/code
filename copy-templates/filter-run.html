@@ -56,7 +56,7 @@
               <label for="gap-{{ each.index }}" class="filter-text">%</label>
           </div>
 
-          <label for="period-{{ each.index }}" class="filter-text pad-left-1">]</label>
+          <label for="freq-{{ each.index }}" class="filter-text pad-left-1">]</label>
 
           <label for="exist-{{ each.index }}" class="filter-text pad-left-1">在</label>
           <input id="exist-{{ each.index }}" type="text" value="{{ each.exist }}" class="filter-text disp-h-center width-35px">
@@ -64,10 +64,10 @@
           <label for="range-{{ each.index }}" class="filter-text">/</label>
           <input id="range-{{ each.index }}" type="text" value="{{ each.range }}" class="filter-text disp-h-center width-35px">
 
-          <select id="period-{{ each.index }}" class="filter-select">
-            <option value="day" {% if each.period == 'day' %}selected{% endif %}>日</option>
-            <option value="week" {% if each.period == 'week' %}selected{% endif %}>周</option>
-            <option value="month" {% if each.period == 'month' %}selected{% endif %}>月</option>
+          <select id="freq-{{ each.index }}" class="filter-select">
+            <option value="day" {% if each.freq == 'D' %}selected{% endif %}>日</option>
+            <option value="week" {% if each.freq == 'W' %}selected{% endif %}>周</option>
+            <option value="month" {% if each.freq == 'M' %}selected{% endif %}>月</option>
           </select>
         </div>
 

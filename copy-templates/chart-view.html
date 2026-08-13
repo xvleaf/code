@@ -192,9 +192,9 @@
       <div id="d-value" contenteditable="true" class="kline-textbox"></div>
 
       <button id="right" class="chart-button" onclick="right_change('{{ market }}.{{ code }}')"></button>
-      <button id="period-day" class="chart-button" onclick="period_change('{{ market }}.{{ code }}', 'day')"></button>
-      <button id="period-week" class="chart-button" onclick="period_change('{{ market }}.{{ code }}', 'week')"></button>
-      <button id="period-month" class="chart-button" onclick="period_change('{{ market }}.{{ code }}', 'month')"></button>
+      <button id="freq-day" class="chart-button" onclick="freq_change('{{ market }}.{{ code }}', 'day')"></button>
+      <button id="freq-week" class="chart-button" onclick="freq_change('{{ market }}.{{ code }}', 'week')"></button>
+      <button id="freq-month" class="chart-button" onclick="freq_change('{{ market }}.{{ code }}', 'month')"></button>
       <button id="full-screen" class="chart-button" onclick="full_screen('{{ market }}.{{ code }}', '{{ screen }}')"></button>
     </div>
 
@@ -381,13 +381,13 @@
                     {% endif %}
                     break;
                 case 'm':
-                    period_change('{{ market }}.{{ code }}', 'month');
+                    freq_change('{{ market }}.{{ code }}', 'month');
                     break;
                 case 'w':
-                    period_change('{{ market }}.{{ code }}', 'week');
+                    freq_change('{{ market }}.{{ code }}', 'week');
                     break;
                 case 'd':
-                    period_change('{{ market }}.{{ code }}', 'day');
+                    freq_change('{{ market }}.{{ code }}', 'day');
                     break;
                 case 'f':
                     full_screen('{{ market }}.{{ code }}', '{{ screen }}');

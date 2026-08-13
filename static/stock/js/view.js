@@ -1,4 +1,12 @@
-import { debounceLayout } from '../../base/js/base.js';
+import { debounceLayout, BREAKPOINT_MD } from '../../base/js/base.js';
+
+const BREAKPOINT_FOR_KLINE = 1440;
+// K 线密度参数
+const KLINE_DENSITY = {
+    desktop: { max: 13, std: 8, min: 3 },
+    mobile:  { max: 20, std: 13, min: 5  }
+};
+
 
 // ========== 全局依赖兼容层 ==========
 function getCsrfToken() {
@@ -105,21 +113,19 @@ function hideChartPlaceholder() {
 }
 
 /**
- * 计算布局 CSS 变量（移除导航栏top计算，纯CSS保证位置）
+ * 计算布局 CSS 变量
  */
 function calcChartLayout() {
     const doc = document.documentElement;
     const viewHeight = window.innerHeight;
-    const viewWidth = window.innerWidth;
 
     const scale = 0.9;
     const minHeight = 400;
-    const maxHeight = 800;
+    const maxHeight = 900;
     let chartHeight = Math.round(viewHeight * scale);
     chartHeight = Math.min(Math.max(chartHeight, minHeight), maxHeight);
     chartHeight = viewHeight < minHeight ? viewHeight : chartHeight;
     doc.style.setProperty('--chart-height', `${chartHeight}px`);
-    // doc.style.setProperty('--frame-width', `${viewWidth}px`);
 }
 
 /**
@@ -401,8 +407,17 @@ async function fetchKlineData(stage) {
     return true;
 }
 
-function renderKlineBasic() {
-    const { ohlc, volume, tp, fl, up, av, lw, ma, mv, deal, show_min, show_std, show_max, deadline, deci } = klineBasic;
+function renderKlineBasic() {    
+    const { ohlc, volume, tp, fl, up, av, lw, ma, mv, deal, deadline: rawDeadline, deci, period } = klineBasic;
+    // 前端计算显示区间，宽度与原请求参数保持一致
+    const showResult = calcShowValues(
+        [...ohlc], [...volume], period, window.innerWidth, rawDeadline
+    );
+    const { show_min, show_std, show_max, deadline } = showResult;    
+    const finalOhlc = showResult.ohlc;
+    const finalVolume = showResult.volume;
+
+
     priceDecimal = deci;
 
     Highcharts.setOptions({
@@ -461,7 +476,7 @@ function renderKlineBasic() {
                 const point = this.points[0].point;
                 updateKlineMetrics(point.index);
                 const date = new Date(point.x);
-                const dateStr = `${date.getMonth() + 1}-${date.getDate()}`;
+                const dateStr = `${date.getFullYear() }-${date.getMonth() + 1}-${date.getDate()}`;
                 return `
                     <b>${dateStr}</b>
                     <table>
@@ -477,9 +492,9 @@ function renderKlineBasic() {
         },
         series: [
             // 主图：K线本体
-            { type: 'candlestick', data: ohlc, keys: ['x', 'open', 'high', 'low', 'close'], yAxis: 0, color: 'gray', lineColor: 'gray', upColor: 'white', upLineColor: 'purple' },
+            { type: 'candlestick', data: finalOhlc, keys: ['x', 'open', 'high', 'low', 'close'], yAxis: 0, color: 'gray', lineColor: 'gray', upColor: 'white', upLineColor: 'purple' },
             // 副图：成交量
-            { type: 'column', data: volume, yAxis: 1, enableMouseTracking: false },
+            { type: 'column', data: finalVolume, yAxis: 1, enableMouseTracking: false },
             // 外轨 tp/fl（灰色）
             { type: 'spline', data: tp, yAxis: 0, enableMouseTracking: false, color: '#c0c0c0', lineWidth: 1 },
             { type: 'spline', data: fl, yAxis: 0, enableMouseTracking: false, color: '#c0c0c0', lineWidth: 1 },
@@ -589,6 +604,81 @@ function updateKlineMetrics(index) {
 }
 
 // ==================== 全局交互函数 ====================
+/**
+ * 二分查找左匹配，找数组中第0列第一个 >= target 的索引，找不到返回数组长度
+ */
+function firstSatisfyIndex(arr, target) {
+    let left = 0;
+    let right = arr.length;
+    while (left < right) {
+        const mid = Math.floor((left + right) / 2);
+        if (arr[mid][0] >= target) {
+            right = mid;
+        } else {
+            left = mid + 1;
+        }
+    }
+    return left < arr.length ? left : arr.length - 1;
+}
+
+/**
+ * 计算 show_std/show_max/show_min，完全对齐后端 calc_show 逻辑
+ * @param {Array} ohlc K线数据
+ * @param {Array} volume 成交量数据
+ * @param {String} period 周期 day/week/month
+ * @param {Number} width 容器宽度
+ * @param {Number} deadline 截止时间戳，-1 表示取最后一根
+ * @returns {Object} { show_std, show_max, show_min, ohlc, volume, deadline }
+ */
+function calcShowValues(ohlc, volume, period, width, deadline = -1) {
+    const count = volume.length;
+    // 周期对应的毫秒增量
+    const dayMs = 86400000;
+    const increment = period === 'week' ? dayMs * 7 
+                    : period === 'month' ? dayMs * 30 
+                    : dayMs;
+
+    // 根据宽度断点选择对应密度配置
+    const density = width >= BREAKPOINT_FOR_KLINE ? KLINE_DENSITY.desktop : KLINE_DENSITY.mobile;
+
+    // 计算各档位显示的K线根数
+    const countStd = Math.round(width * density.std / 100);
+    const countMax = Math.round(width * density.max / 100);
+    const countMin = Math.round(width * density.min / 100);
+
+    let indexDdl;
+    // K线数量不足时，在末尾补空白占位
+    if (count < countStd) {
+        const missing = countStd - count;
+        const lastTs = volume[count - 1][0];
+        for (let i = 1; i <= missing; i++) {
+            const ts = lastTs + i * increment;
+            ohlc.push([ts, 0, 0, 0, 0, 0]);
+            volume.push([ts, 0]);
+        }
+        indexDdl = volume.length - 1;
+    } else {
+        indexDdl = deadline === -1 
+            ? volume.length - 1 
+            : firstSatisfyIndex(volume, deadline);
+    }
+
+    // 计算各档位的边界索引
+    const indexStd = Math.min(Math.max(indexDdl, countStd - 1), volume.length - 1);
+    const indexMax = Math.min(Math.max(indexDdl, countMax - 1), volume.length - 1);
+    const indexMin = Math.min(Math.max(indexDdl, countMin - 1), volume.length - 1);
+
+    // 计算各档位对应的自然天数跨度
+    const showStd = Math.floor((volume[indexStd][0] - volume[Math.max(indexStd - countStd + 1, 0)][0]) / dayMs);
+    const showMax = Math.floor((volume[indexMax][0] - volume[Math.max(indexMax - countMax + 1, 0)][0]) / dayMs);
+    const showMin = Math.floor((volume[indexMin][0] - volume[Math.max(indexMin - countMin + 1, 0)][0]) / dayMs);
+
+    const finalDeadline = volume[indexStd][0];
+
+    return { show_std: showStd, show_max: showMax, show_min: showMin, ohlc, volume, deadline: finalDeadline };
+}
+
+
 function bindGlobalKeyboard() {
     document.addEventListener('keydown', (e) => {
         const active = document.activeElement;
