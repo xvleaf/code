@@ -48,14 +48,14 @@ def focus_list(request):
 def focus_view(request):
     context = {
         "name": "工商银行",
-        "code": "601398",
+        "code": "601398.SH",
         "market": "SH",
         "cat": "stock",
         "site": "focus/view",
 
-        "view": "kline",
+        "view": "trend",
         "screen": "norm",
-        "interval": 3000,
+        "interval": 10000,
 
         "trend_act": {
             "exit": "end",
@@ -63,7 +63,7 @@ def focus_view(request):
             "deal": "deal"
         },
 
-        "navi": True,
+        "navi": False,
         "navi_index": 2,
         "navi_count": 8,
         "navi_prev": True,
@@ -79,6 +79,20 @@ def focus_view(request):
     return render(request, 'focus-view.html', context)
 
 
+# chart/views.py
+
+import json
+import logging
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_GET
+
+# 导入 trend 模块中的核心函数（假设 trend.py 与 views.py 同级或可导入）
+from .trend import get_trend_data
+
+logger = logging.getLogger(__name__)
+
+
 # ===================== 统一接口入口 =====================
 @require_http_methods(["POST"])
 def chart_data(request):
@@ -92,6 +106,9 @@ def chart_data(request):
         data = kline.kline_data_for_chart('E', '000333.SZ')
         return data
     elif func == 'trend':
-        return handle_trend(params)
+        code = params.get('code')
+        init = params.get('init')
+        data = get_trend_data('000333.SZ', init, request.session)
+        return JsonResponse(data)
     else:
         return JsonResponse({'error': 'unsupported func'}, status=400)

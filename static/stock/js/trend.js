@@ -98,7 +98,12 @@ function renderTrendChart() {
                 states: { hover: { enabled: false } }
             }
         },
-        xAxis: { type: 'datetime', ordinal: true, connectNulls: true },
+        xAxis: {
+            type: 'datetime',
+            ordinal: true,
+            connectNulls: true,
+            tickInterval: 30 * 60 * 1000   // 新增：每30分钟一个刻度
+        },
         yAxis: [
             {
                 height: '75%',
