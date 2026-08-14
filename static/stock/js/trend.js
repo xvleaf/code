@@ -57,23 +57,34 @@ async function fetchTrendData(isInitial) {
         cat: pageConfig.cat,
         code: pageConfig.marketCode,
         func: 'trend',
-        init: isInitial ? '1' : '0'
+        init: isInitial ? '0' : '1'
     });
     if (!data) return false;
-    if (isInitial) {
-        ohlcData = data.ohlc;
-        volumeData = data.volume;
-        trendIndex = data.index;
-    } else {
-        ohlcNewData = data.ohlc;
-        volumeNewData = data.volume;
-        trendIndexNew = data.index;
-    }
+
+    // 更新公共轴参数
     preClosePrice = data.pc;
     setPriceDecimal(data.deci);
     tickInterval = data.tick_itv;
     tickMax = data.tick_max;
     tickMin = data.tick_min;
+
+    // 初始化 或 后端标记交易日切换：全量替换数据并重绘
+    if (isInitial || data.reset) {
+        ohlcData = data.ohlc;
+        volumeData = data.volume;
+        trendIndex = data.index;
+        
+        // 非初始化的重置（交易日自动切换），主动重绘图表
+        if (!isInitial && trendChart) {
+            renderTrendChart();
+        }
+    } else {
+        // 正常日内增量更新
+        ohlcNewData = data.ohlc;
+        volumeNewData = data.volume;
+        trendIndexNew = data.index;
+    }
+
     return trendIndex > 0;
 }
 

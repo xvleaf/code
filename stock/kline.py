@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import datetime
 from django.http import JsonResponse
-from . import query, func
+from . import tushare, func
 
 # 交易休息时间
 KLINE_START_DATE = os.getenv('KLINE_START_DATE')
@@ -21,7 +21,7 @@ def kline_data_for_chart(asset, tscode, freq='D', right='qfq', k=10, d=30, deci=
     start = KLINE_START_DATE # or (datetime.datetime.now() - datetime.timedelta(days=730)).strftime('%Y%m%d')
     end = datetime.datetime.now().strftime('%Y%m%d')
 
-    df = query.get_kline_data(
+    df = tushare.get_kline_data(
         asset=asset,
         tscode=tscode,
         start=start,

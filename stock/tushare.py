@@ -3,9 +3,6 @@ import tushare as ts
 import akshare as ak
 import pandas as pd
 
-# ashare 可以获取股票，基金行情实时行情；债券行情因为兼容性问题不能用（可以改造）
-from stock import ashare
-
 # 从环境变量读取TUSHARE的TOKEN
 TUSHARE_TOKEN = os.getenv('DJANGO_TUSHARE_TOKEN')
 # 交易开始时间，对应时间戳
@@ -82,6 +79,43 @@ def get_stock_basic():
     return data
 
 
+# ========================= 以下代码备用 =========================
+# *****fund_basic接口获得的基金列表，与get_kline_data不对应，get_kline_data能得到ETF基金的K线*****
+# *****etf_basic接口无权限调用（需要5000积分以上）*****
+def get_fund_basic():
+    """
+    获取基金基础信息列表
+    :return: DataFrame
+    """
+    # ts_code 159526.SZ
+    # type 基金类型
+    fields = 'ts_code,name,type'
+
+    # market='E' 交易市场: E场内 O场外
+    # status='L' 仅返回上市基金
+    data = pro.etf_basic(market='E', status='L', fields=fields)
+    return data
+
+
+# *****cb_basic接口得到的转债列表，仅部分可采用get_kline_data能得到K线，因此只能用来辅助*****
+# *****重新修改数据库*****
+# *****可以通过更新数据，将退市基金剔除，非删除，仅标注，因为可能有交易*****
+def get_bond_basic():
+    """
+    获取可转债基础信息列表
+    :return: DataFrame
+    """
+    # ts_code 125959.SZ
+    # bond_short_name 可转债简称
+    # cb_type 转债类型: CB-可转债,EB-可交换债
+    # stk_code	正股代码
+    # stk_short_name 正股简称
+    # exchange 交易所 SH上交所 SZ深交所
+    fields = 'ts_code,bond_short_name,cb_type,stk_code,stk_short_name,exchange'
+    data = pro.cb_basic(fields=fields)
+    return data
+
+
 # *****当天的日/周/月K线只有当天收盘后才更新，因此需要自行添加当天的*****
 # *****FD/CB数据周线和月线需要根据日线自行处理*****
 # *****考虑应用中取消FD/CB相关的功能*****
@@ -143,48 +177,8 @@ def get_kline_data(asset, tscode, start, end, freq='D', adj=None):
     return kline
 
 
-def for_trend_data(tscode, deci):
-    """
-    为 get_trend_data 提供分时数据(采用1分钟K线等效）
-    :param tscode: str 000333.SZ
-    :param deci: int 2或3，保留小数位数
-    :return: 字典
-    """
-     # 将 ts 代码转换为 ak 代码
-    num, suffix = tscode.split('.')
-    akcode = f'{suffix.lower()}{num}'
-    # freq 可以取1/5/15/30/60分钟，本函数用于获取分时数据，取1
-    try:
-        trend = ak.stock_zh_a_minute(symbol=akcode, freq='1', adjust='qfq')
-    except Exception:
-        return {}
-
-    if trend.empty:
-        return {}
-
-    trend['day'] = pd.to_datetime(trend['day'])
-    # 取最后一条数据的时间戳
-    last_time = trend['day'].iloc[-1]
-    # 开始时间为数据最后一天零点
-    clock_zero = last_time.normalize()
-
-    pre_trend = trend.loc[trend['day'] < clock_zero]
-    pre_close = pre_trend['close'].iloc[-1] if not pre_trend.empty else None
-    
-    if pre_close is None:
-        return {}
-
-    # 筛选数据最后一天全部数据
-    trend = trend.loc[trend['day'] >= clock_zero]
-    return {
-        'last_time': last_time,
-        'clock_zero': clock_zero,
-        'pre_close': pre_close,
-        'trend': trend
-    }
-
-
-# *****web_configs 中的 time 交易时间改为系统变量中
+# 备用，trend.py 采用了 ashare 的实时数据
+# 本函数采用了 akshare，仅能采集收盘后的数据
 def get_trend_data(tscode, deci):
     """
     获取分时数据(采用1分钟K线等效，基于AKshare）
@@ -193,7 +187,7 @@ def get_trend_data(tscode, deci):
     :return: 结构化结果字典
     """
 
-    get_data = for_trend_data(tscode, deci)
+    get_data = _for_trend_data(tscode, deci)
 
     if not get_data:
         return {}
@@ -285,55 +279,42 @@ def get_trend_data(tscode, deci):
     }
 
 
-def get_last_price(tscode, deci):
+def _for_trend_data(tscode, deci):
     """
-    获取实时数据(采用1分钟K线等效）
+    为 get_trend_data 提供分时数据(采用1分钟K线等效）
     :param tscode: str 000333.SZ
     :param deci: int 2或3，保留小数位数
-    :return: 列表
+    :return: 字典
     """
-    # 将 ts 代码转换为 ashare 代码
+     # 将 ts 代码转换为 ak 代码
     num, suffix = tscode.split('.')
-    code = f'{suffix.lower()}{num}'
-    quote = ashare.get_price(code, frequency='1m', count=1) 
-    return quote
+    akcode = f'{suffix.lower()}{num}'
+    # freq 可以取1/5/15/30/60分钟，本函数用于获取分时数据，取1
+    try:
+        trend = ak.stock_zh_a_minute(symbol=akcode, freq='1', adjust='qfq')
+    except Exception:
+        return {}
 
+    if trend.empty:
+        return {}
 
-# ========================= 以下代码备用 =========================
-# *****fund_basic接口获得的基金列表，与get_kline_data不对应，get_kline_data能得到ETF基金的K线*****
-# *****etf_basic接口无权限调用（需要5000积分以上）*****
-def get_fund_basic():
-    """
-    获取基金基础信息列表
-    :return: DataFrame
-    """
-    # ts_code 159526.SZ
-    # type 基金类型
-    fields = 'ts_code,name,type'
+    trend['day'] = pd.to_datetime(trend['day'])
+    # 取最后一条数据的时间戳
+    last_time = trend['day'].iloc[-1]
+    # 开始时间为数据最后一天零点
+    clock_zero = last_time.normalize()
 
-    # market='E' 交易市场: E场内 O场外
-    # status='L' 仅返回上市基金
-    data = pro.etf_basic(market='E', status='L', fields=fields)
-    return data
+    pre_trend = trend.loc[trend['day'] < clock_zero]
+    pre_close = pre_trend['close'].iloc[-1] if not pre_trend.empty else None
+    
+    if pre_close is None:
+        return {}
 
-
-# *****cb_basic接口得到的转债列表，仅部分可采用get_kline_data能得到K线，因此只能用来辅助*****
-# *****重新修改数据库*****
-# *****可以通过更新数据，将退市基金剔除，非删除，仅标注，因为可能有交易*****
-def get_bond_basic():
-    """
-    获取可转债基础信息列表
-    :return: DataFrame
-    """
-    # ts_code 125959.SZ
-    # bond_short_name 可转债简称
-    # cb_type 转债类型: CB-可转债,EB-可交换债
-    # stk_code	正股代码
-    # stk_short_name 正股简称
-    # exchange 交易所 SH上交所 SZ深交所
-    fields = 'ts_code,bond_short_name,cb_type,stk_code,stk_short_name,exchange'
-    data = pro.cb_basic(fields=fields)
-    return data
-
-
-
+    # 筛选数据最后一天全部数据
+    trend = trend.loc[trend['day'] >= clock_zero]
+    return {
+        'last_time': last_time,
+        'clock_zero': clock_zero,
+        'pre_close': pre_close,
+        'trend': trend
+    }
